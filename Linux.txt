@@ -135,4 +135,4 @@ sed: used to manipulate file content
 -i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d') 
 echo Sunday | sed 's_\(Sun\)_1ny_' --> it will replace Sunday with Sunnyday
 echo 2014-10-01 \; if we need to replace - with + then: echo 2014-10-01 | sed 's/\(....\)-\(..\)-\(..\)/\1+\2+\3/' 
-
+cat filename | sed 's/o\{2,3\}/A/' --> it will replace oo or ooo with A
