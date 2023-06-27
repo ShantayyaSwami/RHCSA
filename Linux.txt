@@ -1,0 +1,138 @@
+Linux is case sensitive language
+RHCSA - EX200
+RHEL8 			vs		RHEL7
+released 2019				2014
+XFS					XFS
+max XFS size 1024 TiB			max XFS size 512 TiB
+max RAM supports 24TiB			max RAM supports 12TiB
+supports podman for containarizaton	by default supports docker
+
+
+Linux			vs		Unix
+Linus dev from Linux			denies richie and ken thomsan
+dev by modifying unix kernal		dev from scratch for motorola, HP etc
+					was not possible to use at home due to high memory and RAM size
+flavor:					linux, MacOS, SunSolaris etc derived from Unix
+fedora: Redhat and CentOS(free)
+debian: ubunto and MintOS, Kali
+
+Highly secured + multiple layer of security + stable + supports previous hardware version + does not run virus +
+supports all file system + Open source + used from smart watch to super computer.
+
+~ - shows home directory
+#: root user
+$: shows normal user
+pwd - shows present working dir
+ls -alh -> shows .(current dir) and ..(parent dir) + so cd .. -- will move you to parent dir    h-option shows size in human redable format like kb,mb,gb etc instead of bytes
+ls -d : list all sub-directories
+
+<permision> <link> <user> <group> <size> <DATE and TIME modified>
+user permissions first char shows d<dir> or -<normal file> or s<socket file> or l<link> etc
+second 3 chars shows <owner> permission
+next 3 char shows <group> permisison 
+next 3 shows <other>
+example: dr-xr-xr-x 		read-4 write-2 execute-1
+
+mkdir -p -> -p options used to create parent child dir
+rm command always comes with promt + alias command shows linux commands with promt for exmaple: alias rm ---> shows rm='rm -i' here -i asks for input
+if you dont want command to promt then unalias <command name>
+
+sftp is used same as scp but secured one. sftp username@server --> change dir to file location --> mget filename (to download file) or we can use ? to see sftp options
+
+Day1-7:
+touch: command used to create empty file + manipulate file timestamp (touch -t yymmddhhmm(custom date which you want) <filename>)
+more: will show file content per page and press v to enter in vi mode. 
+file <filename> : cat command can't open binary files to use file command to check type of file. 
+strings <binary filename>: to cat binary file
+
+Day8: shell expansion: shell checks the command + manipulate it and then pass it to kernal
+'': echo as it is
+"": echo value written inside ""
+<<: use as custom marker: to come out of file while writing. example: cat > hello.txt <<stop --> if i write hello,hi,stop  then will come out of cat command. and hello.txt file will only have <hello,hi,>
+
+control operator: used to execute multiple commands 
+; : used to execute mutiple commnads serially one after other. example: date;cal;echo $SHELL
+& : execute cmnds parallely (execute cmnd in background)
+? : its variable which stores result of last command.  stores value = 0 if last cmnd success else any random value
+&& : logical AND
+||: logical OR
+#: shell ignores the cmmands written after #
+\ : whatever operator you give post \, shell will ignore that. 
+
+shell variables:
+1. system defined var:capital letters defined by Developers. (SHELL,PWD,HOSTNAME,USER etc) 
+2. user defined var: user defined. 
+If you want to permanently use env variables then define in .bashrc file 
+
+set: shows env varibales in system
+unset <var> : to unset env variable
+echo $PS1 : PS1 is shell env variable shows how the perticular shell prompt looks like. [sh shell shows [u@host tild]# or $]. we can change shell prompt using PS1 variable
+like PS1 = 'Hello Shantayya' then aftr logging to shell you will see [hello Shantayya]:cursor
+PATH: var used by shell to check where the camnds binaries are. 
+SHLVL: used to see level of shell. [example: if you executed zsh inside bash shell then you will on 2nd level] we can use shell inside shell
+env -i: used to ignore env variables exported by user.
+
+Shell embadding, history and options:
+`` backticks: works as $()
+!!: bang sign to execute last command
+history -c: to clear history + we can repat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to perpanently clear history
+export HISTTIMEFORMAT='%d %m %y %T': used to set date and time for history commands + history -d <line number> : to delete perticular history command
+space cmnd: comands does not goto history but works only in debian os.
+
+File Globbing: used to dynamically generate file names: [ex: ls *file*]
+? - one char
+* - zero or more char
+[] - char between []
+[!]- no char between[]
+use LANG=C env var to see case sansitive output if ls [A-Z]ile command shows output havinf small letter file,file123 etc
+
+Day13: Input and output redirection 
+stdin (signal 0): standered input through whch we send input to shell (keyboard)
+stdout(1>): through which shell transfer output to user (display/file). cmand > output.txt
+stderr(2>): error output (display/file)		cmnd 2>error.txt
+
+noclobber: avoid to overrite file using (set -o noclobber --> it will add C in noclobber output). if you try to overrite existing file, it throws error.
+forcefully overrite: then use commnd >| filename
+(output redirection) 2>&1 : if we are not sure cmnd gives output or error then we use 2>&1 to redirect out+error in single file. 
+/dev/null 2>&1: used to stop cluttering (show output on screen) then we redirect output to blackhole. yum install -y httpd >/dev/null 2>&1 + >filename: used to nullify
+(input redirection) <: example: cat <filename    
+
+
+Day14: Filters used in Linux
+commands which are used with | called filters. 
+tac filename: used to reverse content. (tee also worls like cat)
+grep: used to search perticular string in files. -i: ignore case -v: except string  -A1/2/3: lines after string  -B1/2/3: print lines before string
+
+passwd file has 7 columns: <user><encryption passwd><user id><grp id><user display name><home dir><default shell>
+
+cut: used to show columns from result. -d:delimiter -f:fields -c:char
+ex: cut -d: -f1,3 /etc/passwd 
+
+tr: used to translate content   (ex: cat say.txt | tr 's' 'S' --> it will translate all small s to S)
+wc: -l:line -w:words -c:char
+sort: as name suggest   -k1/2/3: 1st/2nd/3rd col (ex: sort -k2 say.txt)
+uniq: use with sort -c: used to count occurenece of worlds
+comm: used to see multiple files common entries together. (ex: comm file1 file2)
+sed: used to manipulate file content -i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d')
+
+time cmnd: used to check how much time taken by command to execute
+tar tvf: used to see files inside tar           c:create v:verbose p:prserve permission x:untar f:file z:gz ext
+
+find <location>  -type f/d -perm <perm to search on /a:r/w/x> -iname <filename> -empty<to see mepty files> -user<serach with onwer> -group -mtime <+/-days> -mmin <+/- min> -atime<access time in days> -size<+/- M/G>
+if we have to execute other operation after search the use -exec cmnd {} \;  (ex: find . -type f -perm 0777 -print -exec chmod 0555 {} \;)
+
+locate: very powerful command to search faster. <use updatedb command to update index>
+
+Day16: reguler expression
+BRE: basic regex-> use -G with grep	--> grep -G 's\|ya' say.txt        ya$--> end of string with ya 	^ya--> starts with
+ERE: extended regex --> use -E with grep  --> ex: grep -E 's|ya' say.txt
+PRCE: perl regex --> use -P with grep
+
+\bstring\b or -w: search with space before and after
+
+Day17: stream editor
+sed: used to manipulate file content 
+-i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d') 
+echo Sunday | sed 's_\(Sun\)_1ny_' --> it will replace Sunday with Sunnyday
+echo 2014-10-01 \; if we need to replace - with + then: echo 2014-10-01 | sed 's/\(....\)-\(..\)-\(..\)/\1+\2+\3/' 
+
