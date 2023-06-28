@@ -81,10 +81,11 @@ space cmnd: comands does not goto history but works only in debian os.
 
 File Globbing: used to dynamically generate file names: [ex: ls *file*]
 ? - one char
++ - one or more char
 * - zero or more char
 [] - char between []
 [!]- no char between[]
-use LANG=C env var to see case sansitive output if ls [A-Z]ile command shows output havinf small letter file,file123 etc
+use LANG=C env var to see case sansitive output if ls [A-Z]ile command shows output having small letter file,file123 etc
 
 Day13: Input and output redirection 
 stdin (signal 0): standered input through whch we send input to shell (keyboard)
@@ -101,7 +102,7 @@ forcefully overrite: then use commnd >| filename
 Day14: Filters used in Linux
 commands which are used with | called filters. 
 tac filename: used to reverse content. (tee also worls like cat)
-grep: used to search perticular string in files. -i: ignore case -v: except string  -A1/2/3: lines after string  -B1/2/3: print lines before string
+grep: used to search perticular string in files. -i: ignore case -v: except string  -A1/2/3: lines after string  -B1/2/3: print lines before string  -w if want to fetch one result out of many given results.
 
 passwd file has 7 columns: <user><encryption passwd><user id><grp id><user display name><home dir><default shell>
 
@@ -111,14 +112,14 @@ ex: cut -d: -f1,3 /etc/passwd
 tr: used to translate content   (ex: cat say.txt | tr 's' 'S' --> it will translate all small s to S)
 wc: -l:line -w:words -c:char
 sort: as name suggest   -k1/2/3: 1st/2nd/3rd col (ex: sort -k2 say.txt)
-uniq: use with sort -c: used to count occurenece of worlds
+uniq: use with sort -c: used to count occurenece of words
 comm: used to see multiple files common entries together. (ex: comm file1 file2)
 sed: used to manipulate file content -i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d')
 
 time cmnd: used to check how much time taken by command to execute
 tar tvf: used to see files inside tar           c:create v:verbose p:prserve permission x:untar f:file z:gz ext
 
-find <location>  -type f/d -perm <perm to search on /a:r/w/x> -iname <filename> -empty<to see mepty files> -user<serach with onwer> -group -mtime <+/-days> -mmin <+/- min> -atime<access time in days> -size<+/- M/G>
+find <location>  -type f/d -perm <perm to search on /a:r/w/x> -iname <filename> -empty<to see empty files> -user<serach with owner> -group -mtime <+/-days> -mmin <+/- min> -atime<access time in days> -size<+/- M/G>
 if we have to execute other operation after search the use -exec cmnd {} \;  (ex: find . -type f -perm 0777 -print -exec chmod 0555 {} \;)
 
 locate: very powerful command to search faster. <use updatedb command to update index>
@@ -130,9 +131,93 @@ PRCE: perl regex --> use -P with grep
 
 \bstring\b or -w: search with space before and after
 
+
 Day17: stream editor
 sed: used to manipulate file content 
 -i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d') 
 echo Sunday | sed 's_\(Sun\)_1ny_' --> it will replace Sunday with Sunnyday
 echo 2014-10-01 \; if we need to replace - with + then: echo 2014-10-01 | sed 's/\(....\)-\(..\)-\(..\)/\1+\2+\3/' 
 cat filename | sed 's/o\{2,3\}/A/' --> it will replace oo or ooo with A
+
+
+
+Day18: Introduction to vi editor
+vi: is old editor however vim provides extra features with lot of flexibility. its modified vi editor. 
+1. command mode -> default mode, press escape (create,open etc)
+2. insert mode: when we need to edit file. press -> insert key 
+aAiIoO: these will work in command mode 
+i: start writing from current char	I: start writing from start of current line
+a: aftr current char	A: after current line
+o: after current line	O: before current line
+x: delete current char   X: delete previous char
+u : undo changes	.: redo changes
+r <new char>: to replace current char with new one
+p: paste at below position	P: paste before current line		dd: cur current line	yy: copy current line 
+to copy or cut multiple lines use number and dd or yy then use p or P
+$: to jump to last char of line		0: to jump to start of line		d$: delete current char to last char of line.	d0: delete current char to start char of line
+G: starting page 	gg: last line of page
+J: to merge previous and current line,<cursor should be at start position before pressing J)
+ddp: swicth current and next line
+w: word by word next jump	b: backward word to word jump		dw: delete word
+/string: forward search		?string: backward search
+
+:r cmdn or filename: used to add comamd result or new file content in current file
+
+buffers: in vi editor 36 types of buffers are being used. 
+"add: to cut current line and add to buffer		"ap: paste buffered line
+
+vim file1 file2 file3: To modify multiple files	:args to see which file we are updating		:n to move to next file		:rew to move back to previous file
+:e toggle to previous edited file
+
+:set number or se nu --> shows line numbers	create .vimrc file with set number options to open all file with line number 
+
+vimtutor: very powerful tool to learn vim editor.
+copy only saves last copied line where as in buffere we can save upto 36 copies. 
+
+
+
+Day19: Local user management   [user entry get added to /etc/shadow, /etc/group /etc/passwd file]
+who: whoever has logged in to machine
+w: whoever is executing what command and when logged in to machine
+id: shows user id
+su user: switching to user account temporarely (pretending to be user). it will take you to home directory. 		
+su - user: completely swicth to user account with pwd as home dir. using env variables of that user. 
+
+sudo: super user do
+visudo : when one update [user	ALL:ALL		NOPASSWD: ALL] then perticular user perform all commands without any password promt. if we passwd promt then remove NOPASSWD from line.
+user	ALL:ALL		NOPASSWD: ALL, !/usr/sbin/useradd	[limit command execution: user cann't execute useradd command]	
+if we dont want to limit admin permisions user wise, we can put all users in group and update sudoer permission for that group.
+
+0(root)-1000: id are preserve for system. linux allocated user id after 1000 to normal users.
+passwd file has 7 columns: <user><encryption passwd stored in /etc/shadow file><user id><grp id><user display name or desciption><home dir><default shell>
+<default shell>: we can define /sbin/nologin/ to make the account as service acocunt so user can't login
+
+ideal way to add user: useradd -m <modify> -d <home dir default perm 700> -c <display name> username
+Here we have created user with only homedir + display name but /etc/passwd contains default shell,uid,gid etc so that information stored in /etc/default/useradd or uderadd -D to check default entries
+we can modify these setting
+
+userdel -r username: -r deletes home dir as well
+usermod -s <shell>: we can modify default shell
+chsh -l: shows shell available in system
+chown user:group dir: to change dir wonership		chmod 700 dir
+
+/etc/skel: this is very important dir which contains profile files. and whenever new user is created then these files are copied to new user home dir.
+you can push new features to new user accounts through this dir files.
+
+
+Day20: password management    note: linux uses crypt function at backgnd for passwrd encryption
+sudo su -: if user entry is there in sudoer file but you dont know root passwrd then also you can su to root using. if promt for passwd provide user passwrd.
+passwd user: root to reset user passwd for user.
+
+password related settings contained in /etc/shadow/:
+/etc/shadow: file contains <user> <encrypted passwd> <no.of days since pass not chnaged calculate from 1Jan1970> <after how many days passwd shld chnaged><passwd expiry days> <warning to be thrown no of days before expry> <disable no. of days>
+/etc/login.defs: contains default password settings (min_pass_days,max_pass_days,warn_pass_days etc) related info. admin can chnage these setting so that it will apply to all the users. 
+
+chage username: to modify pdefault passwd setting for perticular user. 
+chage -l username: to list paswd settings for perticuler user. 
+
+openssl passwd <password>: it will give diff encryp pass all the time. we can use -salt datastring to define paswd . openssl passwd -salt <number> <password>
+
+useradd -m -p $(openssl passwd <password>) username --> it will create user with encrypted passwd. but issue with this command is password will apear in history.
+
+
