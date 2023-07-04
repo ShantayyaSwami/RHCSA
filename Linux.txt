@@ -808,11 +808,71 @@ I --> mirror image without sync
 
 
 
+Day42: Create and Manage Swap(file type) Space
+Swap space is a virtual space on hard disk which is used as substitute for physical memory and can be used when real RAM fills up and more space is needed. 
+1. fdisk /dev/sda
+2. n --> p --> 2048 --> 3G -->w --> t --> L --> select 82 for swap file type --> enter
+3. partprobe
+4. lsblk -l
+5. mkswap /dev/sda1
+6. swapon /dev/sda1
+7. lsblk --> will show /dev/sda1 as swap fs type
+8. cat /proc/swaps  or free -m or top	--> to check swap space 
+9. add entry in /etc/fstab to servive the reboot. 
 
+In above example, we have created swap on physical partition but if we need to extend swap then there will be issue. 
+so better to make swap on lvm
 
+1. fdisk /dev/sdb
+2. n --> p --> 2048 --> 3G -->w --> t --> L --> select 82 for swap file type --> enter
+3. partprobe
+4. lsblk -l
+5. pvcreate /dev/sdb1
+6. vgcreate vg /dev/sdb1
+7. lvcreate -L 3G -n swap2 vg 					--> lvextend -L +4G /dev/vg/swap2 (to extend swap lvm by 4G)
+8. mkswap /dev/sdb1
+9. swapon /dev/sdb1
+10. lsblk --> will show /dev/sdb1 as swap fs type
+11. cat /proc/swaps  or free -m or top	--> to check swap space 
+12. add entry in /etc/fstab to servive the reboot. 
 
-
-
+Note: never reduce swap space if its on spame /root fs lvm
 
   
- 
+----Swap usage and its working, swappiness-------------
+Swapping is the process to copy chunks of memory(pages) from RAM to predefined space in hard disk. this is also called paging.   
+Total virtual memory in system = RAM size + Swap space
+
+why swapping:
+1. when we need more physical memory than existing RAM --> swaps out less utilized pages and gives memroy to current application.
+2. Most of the applications use RAM for initialization and after that they dont use RAM. so system can these application in swap space and use memory for new applications. 
+
+disadvantage:
+1. its slows the performance of system. RAM--> speed in ns 		Hard Disk --> speed in ms
+
+vmstat  	--> to check pages in and out details. make sure sysstat package is installed 
+swappiness	--> is the parameter(range 0-100) intro after RHEL6 to tweak swapping configuration(how freq swappig shd happen etc). RHEL6,7 -> default value is 60 and RHEL8 --> default value is 30
+cat /proc/vm/sys/swappiness 	--> to see default value. to inc swap utilization num shd be higher. for less swapping --> less number
+
+echo 50 > /proc/vm/sys/swappiness	--> use to change default swap value temporarily.   
+vi /etc/sysctl.conf			--> vm.swappiness=10	--> set permanently 
+
+----use file as swap space-----
+we can create file in /root fs and use it as swap space
+1. dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+or
+fallocate -l 1G /swapfile					--> create empty file in root (ideally we should create at location with high memory
+
+2. chmod 600 /swapfile			--> only root can read file
+3. mkswap /swapfile			--> format /swapfile as swap fs type
+4. swapon /swapfile -v			--> to enable swap
+5. free -m or cat /proc/swaps
+6. vi /etc/fstab:
+/swapfile	swap	swap	defaults	0 0
+    
+
+-----remove swapfile-------
+1. erase swap entry from /etc/fstab
+2. swapoff /swapfile -v
+3. free -h or swapon --show
+4. rm -f /swapfile
