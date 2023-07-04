@@ -26,7 +26,7 @@ pwd - shows present working dir
 ls -alh -> shows .(current dir) and ..(parent dir) + so cd .. -- will move you to parent dir    h-option shows size in human redable format like kb,mb,gb etc instead of bytes
 ls -d : list all sub-directories
 
-<permision> <link> <user> <group> <size> <DATE and TIME modified>
+<permision> <link> <user> <group> <size> <DATE and TIME modified><File>
 user permissions first char shows d<dir> or -<normal file> or s<socket file> or l<link> etc
 second 3 chars shows <owner> permission
 next 3 char shows <group> permisison 
@@ -39,16 +39,18 @@ if you dont want command to promt then unalias <command name>
 
 sftp is used same as scp but secured one. sftp username@server --> change dir to file location --> mget filename (to download file) or we can use ? to see sftp options
 
+
 Day1-7:
 touch: command used to create empty file + manipulate file timestamp (touch -t yymmddhhmm(custom date which you want) <filename>)
 more: will show file content per page and press v to enter in vi mode. 
-file <filename> : cat command can't open binary files to use file command to check type of file. 
+file <filename> : cat command can't open binary files so use file command to check type of file. 
 strings <binary filename>: to cat binary file
 
 Day8: shell expansion: shell checks the command + manipulate it and then pass it to kernal
 '': echo as it is
 "": echo value written inside ""
 <<: use as custom marker: to come out of file while writing. example: cat > hello.txt <<stop --> if i write hello,hi,stop  then will come out of cat command. and hello.txt file will only have <hello,hi,>
+
 
 control operator: used to execute multiple commands 
 ; : used to execute mutiple commnads serially one after other. example: date;cal;echo $SHELL
@@ -58,6 +60,7 @@ control operator: used to execute multiple commands
 ||: logical OR
 #: shell ignores the cmmands written after #
 \ : whatever operator you give post \, shell will ignore that. 
+
 
 shell variables:
 1. system defined var:capital letters defined by Developers. (SHELL,PWD,HOSTNAME,USER etc) 
@@ -75,7 +78,7 @@ env -i: used to ignore env variables exported by user.
 Shell embadding, history and options:
 `` backticks: works as $()
 !!: bang sign to execute last command
-history -c: to clear history + we can repat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to perpanently clear history
+history -c: to clear history + we can repeat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to perpanently clear history
 export HISTTIMEFORMAT='%d %m %y %T': used to set date and time for history commands + history -d <line number> : to delete perticular history command
 space cmnd: comands does not goto history but works only in debian os.
 
@@ -147,12 +150,12 @@ vi: is old editor however vim provides extra features with lot of flexibility. i
 2. insert mode: when we need to edit file. press -> insert key 
 aAiIoO: these will work in command mode 
 i: start writing from current char	I: start writing from start of current line
-a: aftr current char	A: after current line
+a: aftr current char	A: end of current line
 o: after current line	O: before current line
 x: delete current char   X: delete previous char
 u : undo changes	.: redo changes
 r <new char>: to replace current char with new one
-p: paste at below position	P: paste before current line		dd: cur current line	yy: copy current line 
+p: paste after current line 	P: paste before current line		dd: cut current line	yy: copy current line 
 to copy or cut multiple lines use number and dd or yy then use p or P
 $: to jump to last char of line		0: to jump to start of line		d$: delete current char to last char of line.	d0: delete current char to start char of line
 G: starting page 	gg: last line of page
@@ -181,7 +184,7 @@ who: whoever has logged in to machine
 w: whoever is executing what command and when logged in to machine
 id: shows user id
 su user: switching to user account temporarely (pretending to be user). it will take you to home directory. 		
-su - user: completely swicth to user account with pwd as home dir. using env variables of that user. 
+su - user: completely switch to user account with pwd as home dir. using env variables of that user. 
 
 sudo: super user do
 visudo : when one update [user	ALL:ALL		NOPASSWD: ALL] then perticular user perform all commands without any password promt. if we passwd promt then remove NOPASSWD from line.
@@ -193,7 +196,7 @@ passwd file has 7 columns: <user><encryption passwd stored in /etc/shadow file><
 <default shell>: we can define /sbin/nologin/ to make the account as service acocunt so user can't login
 
 ideal way to add user: useradd -m <modify> -d <home dir default perm 700> -c <display name> username
-Here we have created user with only homedir + display name but /etc/passwd contains default shell,uid,gid etc so that information stored in /etc/default/useradd or uderadd -D to check default entries
+Here we have created user with only homedir + display name but /etc/passwd contains default shell,uid,gid etc so that information stored in /etc/default/useradd or useradd -D to check default entries
 we can modify these setting
 
 userdel -r username: -r deletes home dir as well
@@ -205,7 +208,8 @@ chown user:group dir: to change dir wonership		chmod 700 dir
 you can push new features to new user accounts through this dir files.
 
 
-Day20: password management    note: linux uses crypt function at backgnd for passwrd encryption
+
+Day20: password management    Note: linux uses crypt function at backgnd for passwrd encryption
 sudo su -: if user entry is there in sudoer file but you dont know root passwrd then also you can su to root using. if promt for passwd provide user passwrd.
 passwd user: root to reset user passwd for user.
 
@@ -213,11 +217,602 @@ password related settings contained in /etc/shadow/:
 /etc/shadow: file contains <user> <encrypted passwd> <no.of days since pass not chnaged calculate from 1Jan1970> <after how many days passwd shld chnaged><passwd expiry days> <warning to be thrown no of days before expry> <disable no. of days>
 /etc/login.defs: contains default password settings (min_pass_days,max_pass_days,warn_pass_days etc) related info. admin can chnage these setting so that it will apply to all the users. 
 
-chage username: to modify pdefault passwd setting for perticular user. 
+chage username: to modify default passwd setting for perticular user. 
 chage -l username: to list paswd settings for perticuler user. 
 
 openssl passwd <password>: it will give diff encryp pass all the time. we can use -salt datastring to define paswd . openssl passwd -salt <number> <password>
 
-useradd -m -p $(openssl passwd <password>) username --> it will create user with encrypted passwd. but issue with this command is password will apear in history.
+useradd -m -p $(openssl passwd <password>) username --> it will create user with encrypted passwd. but issue with this command is password will appear in history.
+lock user: usermod -L username	(this will add ! in /etc/shadow) 	or 	passwd -l username (this will add !! in /etc/shadow)
+unlock user: usermod -U username 	or 	passwd -u username
 
 
+Day21: profile files
+1. system profile files: works globally : each shell (bash/ksh) source profile setting(PATH, PS1,HOSTNAME, execute /etc/inputrc(keyboard flags), /etc/bashrc etc) from /etc/profile to current env or you can put file in /etc/profile.d directory
+2. user profile files: works for perticular user
+
+.bash_profile: used to add $HOME to PATH and source .bashrc file + this file loads at every login. 
+.bashrc : executes this file at every shell open + source global /etc/bashrc file + user spefic functions and env vars to save permanetly
+.bash_logout: tells system that user has logged out. 
+
+
+
+Day22: Group management 
+if want to provide permisisons on mass level then create group and add all users to that group, provide reqrd permsision to group.
+
+primary group: whenever user added to system at the same time same name group is also created. each user is part of its primary group. /etc/group 
+secondary group: groups apart from primary are called secondary 
+
+groups: shows user is part of which groups
+usermod -a<append> -g<add primary gr> -G<add secondry grp> UNIX<group name> unix<usr name>: add group to existing user
+vi /etc/group 			: 		add user with , separated to existing group.
+groupmod -n <new name> <old name>: 		change existing group name.
+groupdel grpname		: 		delet grp but it should not be primary
+gpasswd -A <username> <grpname>	: 		To make user as Admin of the group  --> gpasswd -a <usrname> <grpname> : Admin can add user to group 
+Note: its not necessary that admin to be a part of group. 
+
+gpasswd -d <username> <grpname> : 		delete user from grp
+gpasswd -A "" <grpname> 	: 		to dismiss all admins from group
+
+
+
+Day23: File security in Lunux
+File security is managed through 
+1. standard permissons
+2. advanced permissions
+
+ls -lih --> 
+<inode> <file type + permisison of file on own,grp,othr,SGID or SUID  + sticky bit + ACL symbol> <links> <owner> <grp> <size> <date> <file>
+file permission:
+1. char represent type of file (d:dir,-:normal file,l:links b:block s:socket etc)
+2. next 9 char shows owner,group and other permissions
+
+r: 4	w: 2	x: 1 --> total 7(Full perm)	0(no perm)
+
+Schenario1: Shantayya wants read access on file1
+solution: 
+1. change onwer to shantayya if file1 only read by him. 	[chown <onwer> filename]	or [chgrp <grpname> filename]
+2. add him to group and assign necessary perm on group		[chmod 600 filename]
+3. provide perm to others so he can read. but here other users also read then which is security breach		[chmod 666 filename]
+
+If we want to remove execute permission from user,group and other then
+chmod u-x filename; chmod g-x filename; chmod o-x filename;				Note: use u+x,g+x,o+x to add execute permission to user,grp and others 
+
+Note: based on the umask 4 digit number default permissions are assigned to new created files. (umask :  to see what number is defined for umask)
+1st digit: advance perm		2nd: user	3rd: group		4th: other
+umask number is defined in profile files. 
+max default permission on any file=666<user><grp><other>		--> system does not give default execute perm due to security.
+(max perm)  - UMASK  = effective permission on new files
+  666	    - 022    = 644 (rw-r--r--)
+
+max default permission on any directory = 777<user><grp><other>		--> without execute permission user can't access dir + make sure with execute we give read access otherwise its of no use. 
+(max perm)  - UMASK  = effective permission on new directories
+  777	    - 022    = 755 (rwx-r-xr-x)
+
+mkdir -m <perm> dirname 	 	: used to create dir with permission. 
+cp -rp <dir or file> <destination>	: preserve permisisons while copying
+
+Note: even if script does not have execute perm then one can run using sh shell. ideally we should use ./ beacuse script written using bash shell.
+
+
+Day24: advanced file security
+umask -S		: shows perm symbolically
+umask -S u=rwx,go=	: set umask perm symbolically
+
+sticky bit: shows that user can only delete files owned by him in directory.  
+chmod +t dirname	: to apply sticky bit		or append 1 while executing chmod --> chmod 1777 <dirname>
+chmod -t dirname	: to remove stiky bit
+
+If other user has execute permisison then sticky bit will be t (small case) otherwise T
+
+SGID	: set group id bit --> shows group of all files under dir is same group of that dir. we append 2 while applying perm on dir 
+chmod 2777 dirname  or chmod g+s dirname	: to apply SGID bit
+chmod 777 dirname  or chmod g-s dirname		: to remove SGID bit
+
+SUID	: set user id bit	--> It executes any file as its owner or root is executing. 
+chmod 4777 filename  or chmod u+s filename	: to apply SUID bit
+chmod 00777 filename  or chmod u-s filename  	: to remove SUID bit
+
+Note: even if we read special and advanced permissions but these are not enough in situations where diff users need dif permissions. ther we use access control list.
+
+
+Day25: Access control list (shows + at the end of permissions otherwise shows .)
+cat /etc/fstab		: defaults shows that fs supports ACL.
+getfacl filename	: shows permissions available on file
+setfacl -m --no-mask u:<usernam>:<perm>	filename	: provid acl permission to user on file		if dont want to update effective mask value then use --no-mask in command
+setfacl -m g:<grpname>:<perm>	filename	: provide acl perm on group
+setfacl -b filename				: remove acl from file
+setfacl -x g:<grpname> <filename>		: top remove acl from group
+Note: mask value is any max perm assigned 
+
+
+Day26: Inodes,Hard and soft links 
+Note: RHL8 xfs dont have option to disable acl. this option was there in ext4 fs.
+Inode		: ds which stores file metadata except file name and content.
+hard link	: ln link_name	filename	+create separate file with same content 	+link no increases	+deleting orig file has no impact on hard link
+soft link	: ln -s link_name file		+create shortcut				+link increases		+deleing orig file makes file not accessible
+
+
+Day27: Process Management
+Process: a compiled source or prgm running in system. each process has unique ID.
+Parent process ID: always less than child ID.
+system always start init(earlier linux versions) or systemd(latest versions) process(ID is 1) in booting process. 
+daemon: system processes starts their own and keep running till the end. (Never die) 
+Zombie: process killed but stil shown in system. (they don't use resources just available in process entry table)
+
+jobs			: command list all jobs running in bg or foregrnd. 
+echo $$	or ps -C bash	or pidof shell	: shows current shell PID
+echo $PPID		: shows current shell parents PID 
+ 
+fork		: splitting the process into child and executing its copy. exmaple: I am on bash --> ksh starts child process --> exec bash --> use same PID and PPID
+ps fx	or ps -ef		: shows process detailed info	
+<PID><TTY<STAT><TIME<CMND>
+STAT	: shows the current status of process
+D	: uninterruptible sleep (usually IO)
+R	: running
+S	: interruptible sleep(waiting for an event to complete)
+T	: stopped (either by job signal or bcz its being traced)
+X	: dead (should never be seen)
+Z	: defunct(zobie) process. terminated but not reaped by parents. 
+I	: idle state
+Along with above stat keywards, below symbols also shown,
+<	: high prioriy
+N	: low priority
+L	: has pages locked in memory
+s	: session leader
+l	: multithreaded process	
++	: foreground process
+CMND	: which command has started this process.
+
+pstree -p : shows process tree with its PID
+pstree -p -u <username>	: shows processes ran by perticular user.
+
+kill PID	: kills [-15 default] process. kill command has approx. 64 types of signal.(kill -l shows signal list)
+SIGHUP -1	: to reread the configuration (kill -1 1 asking systemd process to reread its configuration)
+SIGKILL -9	: asking kernal to kill it. In std kill command signal sent to process to kill but when we use -9 signal sent to kernal to kill process. Sure kill. 
+SIGSTOP -19	: to stop process
+SIGCONT	-18	: to resume the process (kill -18 PID)
+
+pkill name	: we can stop multiple processes started with perticular name (ex: pkill sleep)
+jobs
+fg <jobs no.>		: to bring the bgrnd process in frground.
+
+
+Day28	: Top command
+<uptime> <no. of users logged in> <load average 1min:5min:15min>
+<total tasks:	running,	stopped,	zombie>			Note: processes are divided into multiple tasks.
+<%CPU	:	time spent by cpu in user space,	system space(kernal),idle state,handling hrdwr intrpts,soft intrpts,in serving other vms -steal time >
+Mib MEM	:	total,	free,	used,	buffer(writing)/cache(reading)
+Mib Swap:	total,	free,	used,	available	Note: swap is virtual memery used by CPU beyond RAM memory. idealy same size of RAM,doubled of RAM
+<PID>	<USER>	<PR>	<NI>	<VIRT>	<RES>	<SHR>	<%CPU>	<%MEM>	<TIME>	<CMND>
+PR	: priority value of process. higher the value-less priority and vice versa. always +20 of NI
+NI	: nice value. used to modify process priority value. 
+VIRT	: total memory consumed by process
+RES	: memory consumed by process in RAM	(%MEM is % of RES)
+SHR	: amount of memory shared with other processes. 
+
+Keys:
+press K	and PID to kill process
+M	: to sort the process acording to mem use
+P	: CPU wise
+N	: process ID wise
+T	: time wise
+u	: user wise
+
+process priority and Nice value:
+process priority(total 139)	: used by kernal to schedule a task.
+Nice value: these are user space values used to control process priority values. 
+-20(Highest priority) to +19(lowest)		Note: only root user can assign minus nice values
+
+priority wise max cpu time is allocated to processes. process priority = nice value + 20
+0-99 are used by kernal and 100-139 used by user
+
+nice -n	num	cmand					: for new process
+renice -n(new priority) <nice value range> <PID>	: for existing process
+
+
+
+Day29: Disk Management
+lsblk 	: list the block devices in system
+fdisk -l : shows detailed infor about devices + also used to create partitions (max 4)
+dmesg	: gives block devices booting logs captured at the time of booting
+
+1. How to erase perticular disk permanantly:
+badblocks -ws /dev/sda or sdb <device path>	: -w(write mode test)	-s:shows % completion this command delete each secter 4 times and push random data.
+or 
+dd if=/dev/zero of=/dev/sda  	: makes each sector or block zero 
+
+
+2. Adding block devices(SCSI(sda/sdb),SATA etc) on the go except nvme(cannot added on the go) dick type:
+ls /sys/class/scsi_host/ | while read host; | do echo  "- - -" > /sys/class/scsi_host/$host/scan ; done
+or 
+for x in `/sys/class/scsi_host/` ; do echo "------$x scanned----" echo "---" > /sys/class/scsi_host/$x/scan/ ; done
+
+fdisk -l <block device name>		
+Note: fdisk --> partition MBR disk= max 4 primary partitions or 3 parimary,1 extended partn -> its primary partitn where further logical partitions(max 5) can be created.
+parimary partitions: partitions where we can keep os + other files
+gdisk --> pertition GPT disk =max 128 partitions
+
+parted command can be used to partition MBR or GPT disk.
+cat /proc/partitions --> contains partition information.
+
+fdisk /dev/sda --> if you press m then helps you to create parition based on options
+n --> p(primary or e-extended)--> 1(1-4 partitions) --> 2048 (default sector)-->+1G (last sector i.e size) -->enter
+if you want to chnage partition type then press t ---> to change partition type L --> select (8e for LVM type) --> w (save changes) --> enter
+
+parprobe /dev/sda or only partprobe --> let kernal read the partition changes
+lsblk 	--> to see partition created	(MAJ--> disk type number SCSI(8) nvme(259) MIN--> its partition no. 1/2/3 etc)
+
+
+3. creating directory to assign to partition:
+mkdir /data
+
+4. mount /dev/sda1 /data --> will throw error bcz system dont know what fs type /data is using so before this we need to (format partition)create fs type being used by /data to store data
+mkfs.xfs /dev/sda1
+
+5. lsblk -f 	or blkid 	--> shows file types under each partition
+6. mount -a or mount /dev/dsa1 /data	--> mount fs on /data				note: umount /data
+Here we can use mouting options like mount -t <ext4/xfs/nfs etc> -o <default,noacl,ro for read only,noexec for no execut perm etc> 
+
+7. df -h	--> shows mounted disk
+
+Note: partition type 1. standard: cannot extend partition	2. lvm: can be extended
+dmidecode -t1	--> shows whether its vmware or physical machine
+
+
+
+Day30: Filesystem and mounting in Linux
+FS: its way of organising the data in partition. file properties shows which file system we use.  
+cat /proc/filesystem 	: shows fs supported by your system
+cat /etc/filesystem	: shows auto detected fs types	(ext4 and xfs most widely used)
+
+Journaling: dedicated area in fs where fs chnages are tracked and when system crashes then possibility of fs corruption is less due to journaling + it helps to keeps the data consistent.
+ext2: 2nd extended fs. one's most widly used fs but its biggest disadvantage is that takes much time in fs checking + no journaling  + max individual file size be 16GB to 2TB + max ext2 fs size can be from 2TB to 32TB
+ext3: similar to ext2 + journaling(3 types: 1.journal(metadata + content stored)	2. ordered: only metadata+ default. metadata jouranl happen only after writing content to disk	3. writeback: only metadata saved + metadata jouranl happen either before or after writing content to disk 
+ext4: very big fs + can reduce fs+ journaling + max individual file size be 16GB to 16TB + max ext4 fs size can be 1EB(1024 petabytes where 1PB=1024 TB) + can mount ext3 as ext4 fs + 
+xfs: cannot reduce fs + poor performance while deleting large no. of file + default fs of RHEL7 onwards
+iso 9960: used to mount CDROM(CD/DVD) iso images 
+gfs: always used in cluster fs
+
+tune2fs: used to convert one fs to other (ext2 to ext3 etc)
+/etc/fstab	: if need to permanently(servive reboot) mount block device then we make mount point entry in fstab file. 
+<UUID=><mount directory><fs type><mode i.e read,write,acl enable etc default usually><0 for dumping i.e backup> <order in which fs check happens,put 0 for dont check fs>
+
+cat /etc/mtab or mount or cat /proc/mounts	: shows current mount points in system
+
+Note: whatever info you see under /proc these details are updated by kernal.
+
+
+-----------Converting ext2 to ext3 and ext4---------------
+tune2fs -l <parition> | grep feature	--> to see whether journaling supports or not
+
+Note: below partition is mounted as ext2 fs. before converting ext we should unmount fs and then try it.
+tune2fs -j <parition>			--> to convert ext2 to ext3 with journaling feature. we cannot jump from ext2 to ext4
+tune2fs -O extends,uninit_bg,dir_index <partition>	--> to convert ext3 to ext4
+tune2fs -O ^has_journal <partition>			--> to disable journaling
+tune2fs -O has_journal <partition>			--> enable again 
+ 
+
+
+Day32: Logical volume feature (LVM)
+why lvm introduced: 
+disk1(8GB)			    Partitions	
+/dev/sda----------->	   1(ext2)		    	2(ext3)
+		   	/dev/sda1 --> /boot	      /dev/sda2--> /
+			   (4GB)			  (4GB)
+
+disk2(50GB)			Total 10GB available
+/dev/sdb-----------> 	   1(ext4)			2(xfs)
+		    /dev/sdb1 -->/home		/dev/sdb2-->/srv/data
+			  (20GB)			(20GB)
+
+Here in standard physical partitions, To extend the partiton task was very hectic and complicated. (backup fs--> unmount--> format existing fs--> recreate partition --> mount --> upload backup + time to do all this etc)
+thats why lvm concept was introduced to extend the partition on the go + new feature(snapshot,migrate one LVM under another LVM and merge VG, can attach disk directly to other machine, restore the deleted lvm etc)
+
+
+disk1	---------> /dev/sda1 ---> pv1 ------------->    Volume group1	 ---------> LVM1(ext4)
+/dev/sda	   /dev/sda2 ---> pv2-------------->		VG1			/home
+								^        ----------> LVM2(xfs)
+								^			/src/data
+disk2  ----------> /dev/sdb1 ---> pv3---------------------------^
+/dev/sdb	   /dev/sdb2 ---> pv4-------------->     Volume Group2	   -----------> LVM3 (ext4)
+								VG2			/apps
+								^
+disk3 ----------> /dev/sdc1 ---> pv5 ---------------------------^
+/dev/sdc		    (physical voumes created with physical partitions)
+
+
+1. add disk manually 
+for x in `/sys/class/scsi_host/` ; do echo "------$x scanned----" echo "---" > /sys/class/scsi_host/$x/scan/ ; done
+
+2. fdisk -l 
+3. fdisk /dev/sda1
+n --> p --> 2048 --> press enter for default --> enter --> t --> L--> select 8e for LVM --> enter
+
+4. partprobe
+5. lsblk
+above has created physical partition
+4. pvs	: shows physical volumes available
+5. pvdisplay	: for detailed physical volume info
+6. pvcreate <partition>
+7. vgs		: shows volume group available
+8. vgdisplay	: for detailed vg info
+9. vgcreate <vg name> <pv1> <pv2> etc
+10. lvs or lvdisplay	: to see lvm  info
+11. lvcreate -L <logical> 3G -n<new> <lvm name> <VG name>
+
+Mount the directory on LVM
+12. mkfs.xfs or mkfx.ext4 <lvm partition name> 	[example: mkfs.ext4 /dev/mapper/LinuxVG-LinuxLV   or /dev/LinuxVG/LinuxLV]
+13. mount /dev/LinuxVG/LinuxLV /data
+14. df -h 
+15. put entry into fstab to make it permanent
+
+
+
+
+--------Resizing LVM-------------
+lvextend -L <total size after extend or only extended size with +sign> <partition>
+lvextend -L +2000M /dev/LinuxVG/LinuxLV <-r optional>
+
+df -h 	: will not show extended size mount we have to perform below command to make it
+resize2fs <partition>				Note: we dont want to use resize2fs then use -r in above command
+resize2fs /dev/LinuxVG/LinuxLV
+
+Note: If there is no sufficient space available in VG then we can create PV and add it in VG to extend the LV.
+
+
+reduce lvm: (please take backup before going ahead with this)
+1. unmount partition (umount)
+2. fsck -f /dev/LinuxVG/LinuxLV 	: to check file system for any errors
+3. resize2fs /dev/LinuxVG/LinuxLV <total size after reduction>
+4. lvreduce -L <total size after reduction> /dev/LinuxVG/LinuxLV 
+
+-----LVM snapshot-------------
+snapshot is the point in time copy of data. used it for temporary backup.
+Note: in the newer systems we can directly create volume group without executing pvcreate command. vgcreate will create pv first and then add that to volume group.
+lvcreate -L <size> -s(snapshot) -n(for name) partition
+
+lvconvert --merge <snapshot lcoation[/dev/system/snap] --> restore the snapshot
+
+lvchange -an partition 	--> to deactivate lvm
+lvchange -ay partition	--> to activate it again 
+mount partition <dir>
+
+Note: modified changes in fs gets captured in snapshot so make sure you provide max value to snapshot while creating it. otherwise whenever snashot utilize % become 100 then snapshot gets corrupt.
+grep Snapshot /var/log/messages --> shows snapshot corrupted 
+
+lvextend +<size> <snapshot loca>	--> to extend the snalshot size. to avoid snapshot corrupt issue.
+lvremove <snapshot location> 		--> to remove corrupted snapshot
+
+
+----------Restore mistakenly removed LVM-----------
+Supposed you mistakenly removed diff lvm than expected then following way you can recover that:
+lvremove parititon	[lvremove /dev/LinuxVG/LinuxLV ]
+ls /etc/lvm/archive	--> all changes happen for lvm are available at this position
+
+vgcfgrestore <vg name> --test -f archive_file	: to test the restoration
+vgcfgrestore LinuxVG	--test -f /etc/lvm/archive/Linux_VG_00002*.vg 
+
+lvs				: shows restored lvm but its state will be inactive. lvscan used to see lvm status
+lvchange -ay partition		: to activate lvm
+mount partiton dir
+df -h
+
+Note: Before lvm restoration, dir should be unmounted. 
+ 
+
+
+Day36: Merging and splitting Volume Groups
+We have created 2 lvms in 2 separate Volume Groups.
+while creating lvm we have used -l because we are not giving total lvm size. we use <extends> to create lvm in linux. defaults extends is 4MB in linux.
+lvcreate -l 1000 -n <lvmname> <vgname>		--> here 1000 X 4MB extends we are creating which is 4GB LVM. this means in lvm we can divide lvm in 4,4MB area.
+
+
+lvcreate -l 1000 -n lv1 vg1			--> we are creating 2 lvms on 2 diff volume groups.
+lvcreate -l 1000 -n lv2 vg2
+
+lvs
+mkfs.ext4 /dev/vg1/lv1				--> formating fs to mount to dir
+mkfs.xfs /dev/vg2/lv2
+
+
+mkdir /test1
+mkdir /test2
+
+mount /dev/vg1/lv1 /test1
+mount /dev/vg2/lv2 /test2
+
+---here if we want to merge 2 VG then we need to unmount lvm of both VG.
+umount /test1
+umount /test2
+
+after unmounting, you stil see lvm are still in active state. so we need to deactive the lvm which we need to merge with another lvm.
+lvscan		--> to see lvm status
+
+vgchange  -an vg2	--> to deactivate lvm2 of vg2
+lvscan 	
+vgmerge vg1 vg2		--> vgmerge vg1<with whom you want to merge> vg2<which vg you want to merge>
+vgs			--> shows only one vg now
+vgchange -ay vg2	--> to actvate lvm2 of vg2	or you can also activate using lvm command lvchange -ay /dev/vg2/lv2
+
+now we can mount the directories again which we unmounted before
+mount /dev/vg1/lv1	/test1
+mount /dev/vg1/lv2	/test2
+
+
+
+--------Splitting the vg into multiple vg
+In above example, we have lvm1 and lvm2 part of vg1 only. we can split vg1 into vg1 and vg2.
+1. unmount /test1 and /test2
+umount /test1
+umount /test2
+
+2. deactivate the vg1 which we have to split
+vgchange -an vg1
+
+3. vgsplit vg1<which we need to split> vg2<new vg> /dev/sda2 <physical volume>
+4. vgs
+5. vgscan	--> to see status
+6. activate the vgs
+vgchange -ay vg1 vg2
+
+7. mount /test1 and /test2
+mount /dev/vg1/lvm1 /test1
+mount /dev/vg2/lvm2 /test2
+
+
+
+Day37: Migrating physical volume and LVM from one disk to other on the go
+We are moving lvm1 from disk1 to disk2. Consider that you have lvm1 configured under vg1 (disk1). if we have to move lvm1(Vg1-disk1) to disk2 then we should create lvm partition + physical volume under it.
+lsblk
+sda					disk
+ --> sda1				part
+       ----> dataVG-dataLV		/data
+sdb					disk
+ --> sdb1				part
+
+Moving dataVG-dataLV to sdb1 partition
+1. pvcreate /dev/sdb1			--> creating physical volume
+2. vgextend dataVG /dev/sdb1		---> to extend the Volume Group with physical volume where we want to move disk lvm
+3. dmsetup deps /dev/dataVG/dataLV	--> to check lvm1 dependancy, if has any then it can trigger an issue while moving to disk2
+4. pvmove -n <lvmname> <source pv> <target pv>
+pvmove -n dataLV /dev/sda1 /dev/sdb1			--> moving data from physical volume sda1 to sdb1
+5. vgreduce <vgname> <pv name which we need to reduce>
+vgreduce dataVG /dev/sda1				--> bcz we have moved data from /dev/sda1 to sdb1
+
+
+--------Migrating lvm data disk from one machine to another------
+1. deativate the volume group(vg)
+vgchange -an <vg name>	--> vgchange -an Volgrp
+2. export the vg			--> after export if you run lvscan or lvs it should not show you VolGrp in result. 
+vgexport Volgrp
+3. powerof machine
+init 0
+4. add above exported disk to new machine
+5. scan the vg or pv using pvscan or execute below command
+for x in '/sys/class/scsi_host/' ; do echo "-------$x Scanned-----" echo "--->/sys/class/scsi_host/$x/scan/" ; done
+6. you can see vg in exported mode so import it first
+vgimport VolGrp
+7. after importing you will see x option from vgs has been removed. but vg still in deactivate state.
+vgchange -ay VolGrp
+8. mount exported lvm and access 
+mount /dev/VolGrp/LogLVM /data
+
+
+Day39: Setup thin provisioning volumes in LVM 
+Thin provisioning is the concept through which we are using storage space effectively.You can manage the storage pool(LVM) of free spaces called a Thin pool which can
+be allocated to number of devices when needed by an application instead of extending the storage pool(VG).
+
+VG	--> volume group is created by deviding the multiple 4MB extends in storage spaces. VG will create 4MB physical extends by default if we not provide physical extend space using -s option. 
+vgcreate -s 32M thin_vg /dev/sdb1
+lvcreate -L 15G --thinpool tp_thinpool thin_vg		--> we are cerating LVM only just adding --thinpool to make it.
+
+Now we will create 3 LVM of 5G to use the pool
+lvcreate -V 5G --thin -n thinpool_clien1 thin_vg/tp_thinpool
+lvcreate -V 5G --thin -n thinpool_client2 thin_vg/tp_thinpool
+lvcreate -V 5G --thin -n thinpool_client3 thin_vg/tp_thinpool
+
+mount the dir on above created thin provisioned lvms
+mkdir -p /mnt/client1 /mnt/client2 /mnt/client3
+
+mkfs.ext4 /dev/thin_vg/thinpool_client1 && mkfs.ext4 /dev/thin_vg/thinpool_client2 && mkfs.ext4 /dev/thin_vg/thinpool_client3
+mount /dev/thin_vg/thinpool_client1 /mnt/client1 && mount /dev/thin_vg/thinpool_client2 /mnt/client2 && mount /dev/thin_vg/thinpool_client3 /mnt/client3
+
+dd if=/dev/zero of=/mnt/client1/text.txt bs=1024M count=4 	--> create 4GB dump data
+
+lvcreate -V 5G --thin -n thinpool_client4 thin_vg/tp_thinpool 	--> over-provisioning. we are creating 4th LVM with 5GB space. If its not --thin pool then it will throw error as vg does not have enough memory. In thinpool system will allocates unused memory from other LVM's to lvm4. But here we have to keep monitoring the vg_pool memory threshold.
+if vg_pool 100% occupied then lvm will get corrupt.
+
+lvextend -V +15G /dev/thin_vg/tp_thinpool	--> extend thin pool with 15GB more. but to make sure VG has enough memory before adding it. otherwise create pv on disk and add it to vg.
+
+	
+
+Day40: Manage multiple LVM disk using striping I/O
+LVM striping	--> Its one of LVM feature which will write on multiple disks instead of constant write on single disk. 
+benefits: (disk performance increases + increase disk life + reduce disk fillup issues etc) 
+
+disk1		partition	physical volume
+/dev/sda--> /dev/sda1	---> 	pv1	-----------⌄	
+	70 I/O					   ⌄
+						___⌄__________
+disk2					       |             |
+/dev/sdb---> /dev/sdb1	---> 	pv2  ------->  |Volume Group |	---> LVM (striping I/O) ---> mount dir
+         70 I/O				       |_____________|	
+						   ^
+disk3						   ^
+/dev/sdc --> /dev/sdc1 ----> 	pv3   -------------^
+         70 I/O
+
+
+we consider that we have volume group created with 4 PV(1GB each) in it. 
+lvcreate -L 900M -n lv_striping -i4 striping_vg			--> -i4 used to create striping lvm
+
+lvdisplay striping_vg/lv_striping -m			--> see striping lvms using -m option. default striping size is 64 KB
+
+lvcreate -L 1G -i3 -I 256 -n lv_striping2 striping_vg /dev/sda1 /dev/sdb1 /dev/sdc1  		--> here I used to set striping size + which 3PV's should be used for striping.
+ 
+
+
+Day41: Logical Volume Manager(LVM) commands
+cd /etc/lvm -->found below directories
+archive --> vg metadata changes are stored here. using this we can restore deleted lvm
+backup  --> stores backup of lvm
+cache  --> chached lvm content
+profile --> like user profile files, lvm profile files are stored here.
+lvm.conf --> used to conigure lvm related configurations. 
+
+/var/lock/lvm  --> files which are used to prevent lvm fs corruption. 
+
+pvck /dev/sba1  --> used to check physical volume consistancy
+pvchange -an /dev/sda1   --> used to change lvm attributes. like activate, disable pv etc
+
+vgrename/lvrename oldname  newname	--> to rename vg/lv
+lvs -a -o +devices		--> used to lvm details alonhg with devices 
+
+
+To remove partition --> 
+1. unmount directory
+2. lvremove /dev/old_vg1/old_lv1
+3. vgremove old_vg1
+4. pvremove /dev/sda1
+5. fdisk /dev/sda --> d(delete)
+
+ 
+pv attributes:
+pvs --> shows 3 dash (---). first is(a-> allocated, u-> unallocated,--- means not used etc)
+pvchange -x n /dev/sda1    --> lvs command will show u-- in attributes. here n means no. 
+
+
+vg attributes:
+r,w --> read, write
+z   --> resizable
+x   --> exported
+p   --> partial 
+
+vgcreate options:
+-l --> max logical volume
+-p --> max physical volume
+-s --> physical extent size(default 4MB)
+-A --> autoBackup
+
+lvcreate options:
+m --> mirrored
+M --> mirrored without intial sync
+o --> origin
+p --> pvmove
+s --> snapshot
+S --> invalid snapshot
+i --> mirror image
+I --> mirror image without sync
+- --> simple volume
+
+
+
+
+
+
+
+
+
+  
+ 
