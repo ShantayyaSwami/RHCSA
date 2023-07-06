@@ -521,6 +521,7 @@ disk2  ----------> /dev/sdb1 ---> pv3---------------------------^
 disk3 ----------> /dev/sdc1 ---> pv5 ---------------------------^
 /dev/sdc		    (physical voumes created with physical partitions)
 
+Note: We need physical volume to create LVM
 
 1. add disk manually 
 for x in `/sys/class/scsi_host/` ; do echo "------$x scanned----" echo "---" > /sys/class/scsi_host/$x/scan/ ; done
@@ -845,13 +846,13 @@ Total virtual memory in system = RAM size + Swap space
 
 why swapping:
 1. when we need more physical memory than existing RAM --> swaps out less utilized pages and gives memroy to current application.
-2. Most of the applications use RAM for initialization and after that they dont use RAM. so system can these application in swap space and use memory for new applications. 
+2. Most of the applications use RAM for initialization and after that they dont use RAM. so system can move these application in swap space and use memory for new applications. 
 
 disadvantage:
 1. its slows the performance of system. RAM--> speed in ns 		Hard Disk --> speed in ms
 
 vmstat  	--> to check pages in and out details. make sure sysstat package is installed 
-swappiness	--> is the parameter(range 0-100) intro after RHEL6 to tweak swapping configuration(how freq swappig shd happen etc). RHEL6,7 -> default value is 60 and RHEL8 --> default value is 30
+swappiness	--> is the parameter(range 0-100) intro after RHEL6 to tweak swapping configuration(how freq swapping shd happen etc). RHEL6,7 -> default value is 60 and RHEL8 --> default value is 30
 cat /proc/vm/sys/swappiness 	--> to see default value. to inc swap utilization num shd be higher. for less swapping --> less number
 
 echo 50 > /proc/vm/sys/swappiness	--> use to change default swap value temporarily.   
@@ -861,7 +862,7 @@ vi /etc/sysctl.conf			--> vm.swappiness=10	--> set permanently
 we can create file in /root fs and use it as swap space
 1. dd if=/dev/zero of=/swapfile bs=1024 count=1048576
 or
-fallocate -l 1G /swapfile					--> create empty file in root (ideally we should create at location with high memory
+fallocate -l 1G /swapfile					--> create empty file in root (ideally we should create at location with high memory)
 
 2. chmod 600 /swapfile			--> only root can read file
 3. mkswap /swapfile			--> format /swapfile as swap fs type
@@ -876,3 +877,117 @@ fallocate -l 1G /swapfile					--> create empty file in root (ideally we should c
 2. swapoff /swapfile -v
 3. free -h or swapon --show
 4. rm -f /swapfile
+
+
+-------How to use file as virtual hard disk----------
+stress	--> used to impose load on system. totally 4 types of load (CPU,RAM,I/O,DISK)
+we need to install stress package first. to install stress package we use extra package repo(epel-release) and then install stress.
+dnf install -y epel-release 
+dnf -y install stress
+
+stress --cpu 4 --timeout 20
+stress -m 1 --vm-bytes 4G			--> based on swappiness parameter we can see after a stress load how swap space is being used when RAM is about to get full. 
+ 
+
+--use file as virtual hard disk----
+1. dd if=/dev/zero of=VHD.img bs=1M count=1200		--> 1GB file we are creating
+2. mkfs -t ext4 VHD.img
+3. blkid
+4. mkdir /testdata
+5. mount -t auto -o loop VHD.img /testdata		--> if you dont know options you can only write mount -a
+6. put entry in fstab
+VHD.img /testdata	ext4	default 0 0		--> never mention UUID in fstab for virtual hard disk. always put full location
+
+
+umount /testdata + delete VHD.img 	---> to unmount virtual hard disk
+
+
+Day45: RAID and RAID levels(RAID 0)
+RAID --> redundant array of independent drives. Its technology used to increase performance and reliability of data storage. RAID system consist of 2 or more drives working together in parallel.
+RAID 0 ---> striping (increased performance + no overhead + no fault tolerent) --> ideal for no critical data storage + higher performance requirement
+RAID 1 --> mirroring 
+RAID 5 --> striping with parity
+RAID 6 --> striping with double parity
+RAID 10  --> combining striping and mirroring 
+
+
+Create RAID partitions:(mdadm)
+1. fdisk /dev/sda
+n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+2. partprobe /dev/sda1 /dev/sdb1
+3. cat /proc/mdstat	--> to see if any RAID disk configured
+4. mdadm -C(create) /dev/md0 -l(level) 0 -n(no.) 2 /dev/sda1 /dev/sdb1			--> We can also use raw disk to create RAID
+5. lsblk 		--> show you RAID partition
+6. mdadm -D /dev/md0	--> print detailed RAID info 
+7. mkfs.ext4 /dev/md0	--> format RAID partition
+8. mkdir /testRAID
+9. mount /dev/md0 /testRAID
+10. put entry in fstab
+/dev/md0	/testRAID	ext4	defaults 0 0
+
+
+1. unmount dir
+2. mdadm -S /dev/md0	--> to stop RAID
+
+
+
+-------Create and Manage RAID1-----------
+1. fdisk /dev/sda 	+ fdisk /dev/sdb  + fdisk /dev/sdc
+n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+
+2. partprobe /dev/sda1  /dev/sdb1 /dev/sdc1
+3. cat /proc/mdstat	--> to see if any RAID disk configured
+4. mdadm -C(create) /dev/md0 -l(level) 1 -n(no.) 3 /dev/sda1 /dev/sdb1	/dev/sdc1		--> We can also use raw disk to create RAID
+5. lsblk 		--> show you RAID partition
+6. mdadm -D /dev/md0	--> print detailed RAID info 
+7. mkfs.ext4 /dev/md0	--> format RAID partition
+8. mkdir /testRAID
+9. mount /dev/md0 /testRAID
+10. put entry in fstab
+/dev/md0	/testRAID	ext4	defaults 0 0
+
+1. mdadm /dev/md0 -f /dev/sda1 		--> to make the disk faulty
+2. unmount /testRAID
+3. mdadm /dev/dm0 -r /dev/sda1		--> to remove disk from RAID1 
+4. mdadm /dev/md0 -a /dev/sdc1		--> to add new disk to RAID
+
+
+
+--------Create and Manage RAID5-------
+min 3 disks + max 16 disks used in RAID5 + here dedicated disk used for parity checksum(used for error detection and error correction)
+fast read transactions + litle slow write + 1 disk failure can withstand(if using 3 disks) --> advantages
+complex technology + data can loss if >1 disks failed at same time --> disadvantage
+RAID2 + RAID3 + RAID7 --> rarely used
+
+RAID file capacity is always = number of disks used for stripping but not for parity
+mdadm -c /dev/md0 -l 5 -n 3 /dev/sda /dev/sdb /dev/sdc 	--> using raw disks to create RAID5 partition
+mkfs.ext4 /dev/md0
+mkdir /raid5
+mount /dev/md0 /raid5
+mdadm -D /dev/md0  or cat /proc/mdstat
+
+mdadm /dev/md0 -f /dev/sda	--> to make disk falty
+mdadm /dev/md0 -r /dev/sda	--> remove faulty disk
+mdadm /dev/md0 -a /dev/sdc	---> add new disk to RAID5
+
+
+
+-------Create and Manage RAID6----------
+min4 disks + stripping with double parity(dedicated disk is used for parity and that parity backup is saved on other disk) 
+if 2 drive fail even withstand(is using 4 disks) + efficient storage + safe data is concern then use RAID6 --> preffered over RAID5
+20% slower than RAID5
+
+same steps as above
+
+-----Create and Manage RAID1+0-----------
+if one drive fails then rebuilt time is fast as you just have to copy data from mirror disk to new disk --> advantage
+half of drive goes into mirroring so comparing with RAID5/RAID6, this is an expensive way of redundancy --> disadvantage
+
+stripping --> happen at upper level and Mirroring -> happens at lower levels
+Say we have 4 disks used in RAID10 then there will be 2 sets(SetA(1-1 disk) and SetB(1-1 disk).
+
+
+
