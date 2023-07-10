@@ -19,6 +19,8 @@ debian: ubunto and MintOS, Kali
 Highly secured + multiple layer of security + stable + supports previous hardware version + does not run virus +
 supports all file system + Open source + used from smart watch to super computer.
 
+cat /etc/redhat-release
+
 ~ - shows home directory
 #: root user
 $: shows normal user
@@ -138,7 +140,7 @@ PRCE: perl regex --> use -P with grep
 Day17: stream editor
 sed: used to manipulate file content 
 -i:change in file directly, d: delete line with string  s: change old to new string (ex: sed 's/old/new/' or sed '/string/d') 
-echo Sunday | sed 's_\(Sun\)_1ny_' --> it will replace Sunday with Sunnyday
+echo Sunday | sed 's_\(Sun\)_1ny_' --> it will replace Sun with Sunny--> Sunnyday
 echo 2014-10-01 \; if we need to replace - with + then: echo 2014-10-01 | sed 's/\(....\)-\(..\)-\(..\)/\1+\2+\3/' 
 cat filename | sed 's/o\{2,3\}/A/' --> it will replace oo or ooo with A
 
@@ -183,7 +185,7 @@ Day19: Local user management   [user entry get added to /etc/shadow, /etc/group 
 who: whoever has logged in to machine
 w: whoever is executing what command and when logged in to machine
 id: shows user id
-su user: switching to user account temporarely (pretending to be user). it will take you to home directory. 		
+su user: switching to user account temporarely (pretending to be user). it will not take you to home directory. 		
 su - user: completely switch to user account with pwd as home dir. using env variables of that user. 
 
 sudo: super user do
@@ -202,7 +204,7 @@ we can modify these setting
 userdel -r username: -r deletes home dir as well
 usermod -s <shell>: we can modify default shell
 chsh -l: shows shell available in system
-chown user:group dir: to change dir wonership		chmod 700 dir
+chown user:group dir: to change dir ownership		chmod 700 dir
 
 /etc/skel: this is very important dir which contains profile files. and whenever new user is created then these files are copied to new user home dir.
 you can push new features to new user accounts through this dir files.
@@ -305,7 +307,7 @@ chmod -t dirname	: to remove stiky bit
 
 If other user has execute permisison then sticky bit will be t (small case) otherwise T
 
-SGID	: set group id bit --> shows group of all files under dir is same group of that dir. we append 2 while applying perm on dir 
+SGID	: set group id bit --> shows group of all files under dir is same group of that dir when we create any new file. we append 2 while applying perm on dir 
 chmod 2777 dirname  or chmod g+s dirname	: to apply SGID bit
 chmod 777 dirname  or chmod g-s dirname		: to remove SGID bit
 
@@ -413,7 +415,7 @@ renice -n(new priority) <nice value range> <PID>	: for existing process
 
 
 Day29: Disk Management
-lsblk 	: list the block devices in system
+lsblk 	: list the block devices in system		--> lsblk -f: shows list of block devices with fs type
 fdisk -l : shows detailed infor about devices + also used to create partitions (max 4)
 dmesg	: gives block devices booting logs captured at the time of booting
 
@@ -451,7 +453,7 @@ mkdir /data
 mkfs.xfs /dev/sda1
 
 5. lsblk -f 	or blkid 	--> shows file types under each partition
-6. mount -a or mount /dev/dsa1 /data	--> mount fs on /data				note: umount /data
+6. mount -a (only after putting entry in fstab) or mount /dev/dsa1 /data	--> mount fs on /data				note: umount /data
 Here we can use mouting options like mount -t <ext4/xfs/nfs etc> -o <default,noacl,ro for read only,noexec for no execut perm etc> 
 
 7. df -h	--> shows mounted disk
@@ -476,7 +478,7 @@ gfs: always used in cluster fs
 
 tune2fs: used to convert one fs to other (ext2 to ext3 etc)
 /etc/fstab	: if need to permanently(servive reboot) mount block device then we make mount point entry in fstab file. 
-<UUID=><mount directory><fs type><mode i.e read,write,acl enable etc default usually><0 for dumping i.e backup> <order in which fs check happens,put 0 for dont check fs>
+<UUID=><mount directory><fs type><mode i.e read,write,acl enable etc default usually><0 for dumping i.e backup> <order in which fs check happens,put 0 for dont check fs 1(root fs),2>: here dont provide value >2 otherwise disk chk wil go in emergency.
 
 cat /etc/mtab or mount or cat /proc/mounts	: shows current mount points in system
 
@@ -487,7 +489,7 @@ Note: whatever info you see under /proc these details are updated by kernal.
 tune2fs -l <parition> | grep feature	--> to see whether journaling supports or not
 
 Note: below partition is mounted as ext2 fs. before converting ext we should unmount fs and then try it.
-tune2fs -j <parition>			--> to convert ext2 to ext3 with journaling feature. we cannot jump from ext2 to ext4
+tune2fs -j <parition>					--> to convert ext2 to ext3 with journaling feature. we cannot jump from ext2 to ext4
 tune2fs -O extends,uninit_bg,dir_index <partition>	--> to convert ext3 to ext4
 tune2fs -O ^has_journal <partition>			--> to disable journaling
 tune2fs -O has_journal <partition>			--> enable again 
@@ -528,7 +530,7 @@ for x in `/sys/class/scsi_host/` ; do echo "------$x scanned----" echo "---" > /
 
 2. fdisk -l 
 3. fdisk /dev/sda1
-n --> p --> 2048 --> press enter for default --> enter --> t --> L--> select 8e for LVM --> enter
+n --> p -->1-->  2048 -->press enter for default(full) size--> enter --> t --> L--> select 8e for LVM --> enter
 
 4. partprobe
 5. lsblk
@@ -605,8 +607,8 @@ Note: Before lvm restoration, dir should be unmounted.
 
 Day36: Merging and splitting Volume Groups
 We have created 2 lvms in 2 separate Volume Groups.
-while creating lvm we have used -l because we are not giving total lvm size. we use <extends> to create lvm in linux. defaults extends is 4MB in linux.
-lvcreate -l 1000 -n <lvmname> <vgname>		--> here 1000 X 4MB extends we are creating which is 4GB LVM. this means in lvm we can divide lvm in 4,4MB area.
+while creating lvm we have used -l because we are not giving total lvm size. we use <extends> to create lvm in linux. defaults extents is 4MB in linux.
+lvcreate -l 1000 -n <lvmname> <vgname>		--> here 1000 X 4MB extents we are creating which is 4GB LVM. this means in lvm we can divide lvm in 4,4MB area.
 
 
 lvcreate -l 1000 -n lv1 vg1			--> we are creating 2 lvms on 2 diff volume groups.
@@ -704,7 +706,7 @@ Day39: Setup thin provisioning volumes in LVM
 Thin provisioning is the concept through which we are using storage space effectively.You can manage the storage pool(LVM) of free spaces called a Thin pool which can
 be allocated to number of devices when needed by an application instead of extending the storage pool(VG).
 
-VG	--> volume group is created by deviding the multiple 4MB extends in storage spaces. VG will create 4MB physical extends by default if we not provide physical extend space using -s option. 
+VG	--> volume group is created by deviding the multiple 4MB extents in storage spaces. VG will create 4MB physical extents by default if we not provide physical extend space using -s option. 
 vgcreate -s 32M thin_vg /dev/sdb1
 lvcreate -L 15G --thinpool tp_thinpool thin_vg		--> we are cerating LVM only just adding --thinpool to make it.
 
@@ -746,7 +748,7 @@ disk3						   ^
 
 
 we consider that we have volume group created with 4 PV(1GB each) in it. 
-lvcreate -L 900M -n lv_striping -i4 striping_vg			--> -i4 used to create striping lvm
+lvcreate -L 900M -n lv_striping -i4 striping_vg			--> -i4 used to create 4 striping lvm
 
 lvdisplay striping_vg/lv_striping -m			--> see striping lvms using -m option. default striping size is 64 KB
 
@@ -812,7 +814,7 @@ I --> mirror image without sync
 Day42: Create and Manage Swap(file type) Space
 Swap space is a virtual space on hard disk which is used as substitute for physical memory and can be used when real RAM fills up and more space is needed. 
 1. fdisk /dev/sda
-2. n --> p --> 2048 --> 3G -->w --> t --> L --> select 82 for swap file type --> enter
+2. n --> p --> 1--> 2048 --> 3G -->w --> t --> L --> select 82 for swap file type --> enter
 3. partprobe
 4. lsblk -l
 5. mkswap /dev/sda1
@@ -837,7 +839,7 @@ so better to make swap on lvm
 11. cat /proc/swaps  or free -m or top	--> to check swap space 
 12. add entry in /etc/fstab to servive the reboot. 
 
-Note: never reduce swap space if its on spame /root fs lvm
+Note: never reduce swap space if its on same /root fs lvm
 
   
 ----Swap usage and its working, swappiness-------------
@@ -845,7 +847,7 @@ Swapping is the process to copy chunks of memory(pages) from RAM to predefined s
 Total virtual memory in system = RAM size + Swap space
 
 why swapping:
-1. when we need more physical memory than existing RAM --> swaps out less utilized pages and gives memroy to current application.
+1. when we need more physical memory than existing RAM --> swaps out less utilized pages and gives memry to current application.
 2. Most of the applications use RAM for initialization and after that they dont use RAM. so system can move these application in swap space and use memory for new applications. 
 
 disadvantage:
@@ -857,6 +859,7 @@ cat /proc/vm/sys/swappiness 	--> to see default value. to inc swap utilization n
 
 echo 50 > /proc/vm/sys/swappiness	--> use to change default swap value temporarily.   
 vi /etc/sysctl.conf			--> vm.swappiness=10	--> set permanently 
+
 
 ----use file as swap space-----
 we can create file in /root fs and use it as swap space
@@ -913,8 +916,8 @@ RAID 10  --> combining striping and mirroring
 
 Create RAID partitions:(mdadm)
 1. fdisk /dev/sda
-n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
-n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p--> 1--> 2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p--> 2--> 2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
 2. partprobe /dev/sda1 /dev/sdb1
 3. cat /proc/mdstat	--> to see if any RAID disk configured
 4. mdadm -C(create) /dev/md0 -l(level) 0 -n(no.) 2 /dev/sda1 /dev/sdb1			--> We can also use raw disk to create RAID
@@ -934,9 +937,9 @@ n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
 
 -------Create and Manage RAID1-----------
 1. fdisk /dev/sda 	+ fdisk /dev/sdb  + fdisk /dev/sdc
-n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
-n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
-n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p--> 1 --> 2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p--> 2 --> 2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
+n--> p--> 3 --> 2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
 
 2. partprobe /dev/sda1  /dev/sdb1 /dev/sdc1
 3. cat /proc/mdstat	--> to see if any RAID disk configured
@@ -953,7 +956,7 @@ n--> p-->2048 --> 2G --> enter --> w--> t--> L--> fd(RAID file type) --> enter
 2. unmount /testRAID
 3. mdadm /dev/dm0 -r /dev/sda1		--> to remove disk from RAID1 
 4. mdadm /dev/md0 -a /dev/sdc1		--> to add new disk to RAID
-
+5. mount /dev/md0 /testRAID
 
 
 --------Create and Manage RAID5-------
@@ -991,3 +994,272 @@ Say we have 4 disks used in RAID10 then there will be 2 sets(SetA(1-1 disk) and 
 
 
 
+Day50: Disk quota management for users and groups in ext4 fs
+Disk quota management concept is used to set limits on how much disk space or how many inodes one can use. helps to efficiently use file storage. 
+Quota policy:
+soft limit : gets warning before full limit used 
+hard limit : can't use after this limit
+grace period: additional time given to user or grp to use space or inodes
+
+you need to first check quota packages are installed or not:
+rpm -qa quota or yum list installed quota
+ 
+3 types of quota can be specified:
+1. how much of block space can use
+2. how many files one can create by specifying inode value
+3. both
+
+1. create partition and mount dir
+vi /etc/fstab
+/dev/sda1 	/quotadir	ext4	default	0 0
+2. mount -a			--> mount quotadir on /dev/sda1
+3. mount  grep quota		--> to see whether quota enable on disk or not,we have not enabled so wont show anything.
+4. vi /etc/fstab
+/dev/sda1 	/quotadir	ext4	default,usrquota,grpquota,prjquota	0 0
+5. mount -o remount /quotadir			--> remount 
+6. mount  grep quota		--> will show you quota enabled on dir
+7. quotacheck -cug /quotadir	--> to create quota files for user and groups, which can be used to set quota limits for user and grps
+8. quotaon /quotadir		--> enable quota
+edquota	<username>		--> to specify user quota
+edquota	-g <grpname>		--> to specify quota for grp
+9.quota <username>		--> check quota for users
+
+edquota -T <user> or -g <groupname>	--> default is 7 days. to set grace period for user or grp --> make sure you make quotaon /quotadir after this. else if made in on earlier then makde off, specify grace period an dmake it on.
+
+
+-----xfs_quota expert utility to manage quota on xfs fs---------------
+xfs_quota -x(expert) -c(commandline) report /quotadir			--> shows quota specified on /quotadir
+xfs_quota -x -c 'limit bsoft=  bhard=  <username>' /dir			--> set block quota limits for user on /dir
+xfs_quota -x -c 'limit isoft= ihard= <usr>' /dir			--> set inode quota limits for user on dir
+xfs_quora -x -c 'report bih' /dir					--> to see block and inode quota in human readable format
+
+xfs_quota -x -c 'limit bsoft=  bhard=  <username>' /dir  -c 'limit isoft= ihard= <usr>' /dir		--> set block or inode limit quota in single cmnd
+
+
+------prjquota used to implement quota limit on dir------------
+echo projectname:ID >/etc/prjid
+xfs_quota -x -c 'project -s projectname' /dir				--> enable project quota
+xfs_quota -x -c 'limit -p bhard= bsoft= prjname' /dir			--> set quota limit on project
+xfs_quota -x -c "state -p" /dir						--> to see project quota
+xfs_quota -x -c "timer -p<project> -b<block> 10days" /dir		--> reduce grace period using timer on project dir
+xfs_quota -x -c "off/disable/enable -pugv" /dir				--> disable/enable quota for project,user and group v-verbose. use off for permanent disable.
+
+
+
+Day52: Check and repair FS
+fsck,e2fsck(ext fs), xfs_repair(xfs fs)	--> used to check and repair fs.fsck is wrapper on e2fsck. e2fsck was used to chk ext2 fs but later extended to ext3,4.
+rpm -qa | grep utils-linux*		--> package resposible for fsck commands. rpm -qf "which fsck" 	--> tells you pcg for fsck commands
+
+Note: fs should not be mounted to check fs. below options are used with fsck
+-f	: to forcefully check even disk is clean
+-v	: verbose
+-a	: to fix if errors any
+-n	: dont repair error
+-A	: to check all fs in system in order specified in fstab
+-R	: exclude root fs
+
+
+
+Day53: Virtual data optimizer(VDO) volume
+its block virtualization technique + provided data de-duplication and compression facility at block level + can also provide thin provisioned volumes using VDO.
+yum list installed kmod-kvdo*				--> need this package for VDO
+yum install kmod-kvdo vdo -y				--> install if not available
+
+systemctl start vdo					--> start vdo service to create thin prvisoned volumes
+vdo create --name=vdo1  --device=/dev/sda  --vdoLogicalSize=300G		--> create VDO
+vdostats -hu						--> shows vdo details
+pvcreate /dev/mapper/vdo1				--> created pv
+vgcreate vdovg1 /dev/mapper/vdo1			--> created vg of 300GB where pv is of 10GB only
+
+lvcreate -L 50G -n vdolv1 vdovg1			--> create lv 
+mkfs.ext4 -k /dev/vdovg1/vdolv1				--> format lv
+mount -o discard /dev/vdovg1/vdolv1/ /testvdo		--> used discard option to discard unused blocks from partition.
+		
+
+
+Day54: stratis filesystem (RHEL8 exclusive feature)
+default xfs fs use it + can take snapshot + thin provisioning + pool based storage mgmt + fs and storage monitoring we can do in stratis fs
+2 statis packages are needed: stratisd --> deomon services used to start stratis services 	stratis-cli --> manage stratis using cli
+
+yum install -y stratisd stratis-cli 		--> if not installed
+systemctl start stratisd			--> start and enable stratisd
+systemctl enable --now stratisd
+
+lsblk -f					--> to see block devices with fs types
+wipefs -a(all) /dev/sdb				--> we can wipe all fs if there exist any on /dev/sdb
+stratis pool create stratis_pool1 /dev/sdb (multiple disks)	--> create stratis pool from existing drives 
+stratis pool list				--> to list available pools 
+
+stratis fs create stratis_pool1 filesystem-1	--> create fs on stratis pool by formating it
+stratis fs list <poolname>			--> show stratis fs
+
+mount /dev/stratis/stratis_pool1/filesystem-1	/data		--> mount stratis fs
+vi /etc/fstab:
+/dev/stratis/stratis_pool1/filesystem-1		/data
+mount -a							--> mount startis fs
+
+stratis fs destory <poolname> <fs-name>				--> to destroy fs from pool
+stratis pool add-data <pool name> <disk>			--> to add disk to pool [stratis pool add-data stratis-pool1 /dev/sdb]
+
+
+stratis fs snapshot stratis_pool1 filesystem-1 mysnapshot1	--> create snapshot from filsystem-1 as mysnapshot1
+mount /dev/stratis/stratis-pool1/mysnapshot1	/data		--> to restore file system
+
+rm /dev/stratis/stratis_pool1/mysnapshot			---> to remove snapshot
+
+stratis pool destroy stratis_pool1				---> to destroy the startis pool
+
+ 
+
+Day55: Set up disk encryption usng LUKS in Linux (like BitLocker in windows)
+LUKS --> linux unified key setup. used to encrypt the data on disk. 
+dnf list installed | grep cryptsetup			--> checking LUKS utility package installed or not. if not then install it
+
+cryptsetup luksFormat 	/dev/sdb			--> formatiing /dev/sdb disk for encrypting it.
+cryptsetup luksOpen	/dev/sdb <name of fs on /dev/sdb>	 --> name can be anythng like myfiles etc
+cryptsetup status myfiles				--> to check fs status
+
+mkdir /data
+mkfs.ext4 /dev/mapper/myfiles
+
+mount /dev/mapper/myfiles	/data			--> mount encrypted disk
+
+---to permanently mount encrypted fs-----
+dd if=/dev/urandom of=/temp/crypt_file bs=4096 count = 1			--> creating key file which can be used to encrypt disk. provide password
+chmod 600 /tmp/crypt_file
+
+mv /tmp/crypt_file /etc/
+
+cryptsetup luksAddKey	/dev/sdb  /etc/crypt_file			--> define key should be used on which disk to encrypt. 
+vi /etc/crypttab							--> file used to mount crypted disk permanently
+<name of fs>	<disk>		<key file>
+myfile		/dev/sdb	/etc/crypt_file				
+
+vi /etc/fstab
+/dev/mapper/myfiles	/data	ext4 default 0 0
+
+mount -a
+
+
+cryptsetup kulsClose myfiles					--> close encrypted disk
+cryptsetup luksRemoveKey	/dev/sdb			--> remove key from disk
+cryptsetup luksRemove myfiles					--> remove encrypted fs 
+cryptsetup luksChangeKey	/dev/sdb			--> if want to change key which is used to encrypt disk
+
+
+
+
+Day56: RHEL8 Booting process
+Booting --> the process of copying os files from hard disk(/boot parition) to RAM sequencially and allowing us to use system  and other os components. 
+
+BIOS 	--> When we start machine, singal flows in motherboard. BIOS prg in chip(CMOS battery) executes POST operation. 
+ ⌄
+ ⌄
+POST  --> power on self test. it checks whether all the attached compoents working or not. and gives control back to BIOS
+ ⌄
+BIOS 	--> when it gets the POST result as successful then it executes MBR by searching in boot devices (HDD,LAN,CD/DVD,USB etc).
+ ⌄		 if there is any h/w issue then system fails.  
+ ⌄
+MBR	--> Master boot record stored in 1st sector of booting devices.(512byes) primary boot loader information stored in 440 byes of code. its not a main boot loader.    
+ ⌄		rather main boot loader sector info stored here. (primary boot loader points to GRUB2 i.e main boot loader)
+ ⌄
+GRUB2	--> Grand unified loader(v2).  GRUB2 loads its conf. from /boot/grub2/grub.conf file + then provides option to select kernal from boot menu to boot machin 
+ ⌄	    then loads selected/default VMLinuz kernal img from /boot/vmlinuz-4.18* + then extract contents of initramfs img frm /boot/initramfs-4.18*
+ ⌄		(loads kernal into RAM)
+	   /boot/grub2/grub.conf --> this contains info related to grub timeout,default kernal, default run level etc but never edit file directly
+Kernal
+ ⌄
+--> Kernal(VMLinuz) find drivers in initramfs for all h/w intialization/ after this it executes the init process
+H/W initialization
+ ⌄
+ ⌄
+/sbin/init execution	--> Kernal executes /sbin/init from initramfs which will start 1st process having PID-1 + in RHEL8 init has been replaced with systemd
+	/sbin/init has soft link to ../lib/systemd/system  + its the process which keeps running until system up and stops at last.
+ ⌄
+initrd.target execution	--> with the help of initramfs systemd executes all units for the initrd.target + In RHEL8 runlevel called as targets. 
+ (total 7 targets) + this includes mounting the root fs on disk at /sysroot dir for temp 
+ ⌄
+Switches root fs	--> Kernal root fs switch from initramfs root(/sysroot) to system root fs(/)
+ ⌄
+ ⌄
+systemd looks for default target  --> system reads the file(/lib/systemd/system/*target) linked by /etc/systemd/system/deafult.target to determine default target(run level)
+		systemctl set-deafult <target> --> used to set default run level
+ ⌄
+1. /lib/systemd/system/runlevel0.target --> poweroff.target
+2. /lib/systemd/system/runlevel1.target --> rescue.target
+3. /lib/systemd/system/runlevel2.target --> multi-user.target
+4. /lib/systemd/system/runlevel3.target --> multi-user.target
+5. /lib/systemd/system/runlevel4.target --> multi-user.target
+6. /lib/systemd/system/runlevel5.target --> graphical.target
+7. /lib/systemd/system/runlevel6.target --> reboot.target
+ ⌄
+ ⌄
+Start other services and OS components 		--> system target file defines the services that system starts
+
+
+
+Day57:  Set or Change default run level
+1. /lib/systemd/system/runlevel0.target --> poweroff.target		--> shut down + power off 
+2. /lib/systemd/system/runlevel1.target --> rescue.target		--> single user mode + without GUI, network
+3. /lib/systemd/system/runlevel2.target --> multi-user.target		--> without GUI,n/w
+4. /lib/systemd/system/runlevel3.target --> multi-user.target		--> Without GUI but n/w
+5. /lib/systemd/system/runlevel4.target --> multi-user.target		--> only for research use only
+6. /lib/systemd/system/runlevel5.target --> graphical.target		--> with n/w
+7. /lib/systemd/system/runlevel6.target --> reboot.target		--> reboot
+
+runlevel --> command to see runlevel or who -r
+systemctl get-default		--> get current permanent default target
+cat /lib/systemd/system/default-target			--> shows current target
+init <no>			--> imeediatly change run level. it has no impact on default run level
+
+
+----Resolve kernal panic error------------
+Kernal panic error --> due to initramfs files corrupt or deleted 
+
+ls /boot		--> shows kernal files
+/etc/grub.d or /etc/default/grub 	--> used to update grub configuration 
+grub2-mkconfig		--> after updating above files we run this to make changes in grub confguration  
+
+init 6 or systemctl reboot 		--> reboot machine
+
+-----If we get kernal panic error due to initramfs file corrupt ot deletion-----
+1. use grub menu to login through rescue  mode
+2. cd /boot 	--> to check initramfs file deleted or corrupted
+3. uname -r	--> to check os version
+4. dracut -v <initramfs-paste above result.img> <above result>	--> to create initramfs file use -f to override in case corrupt
+or 
+mkinitrd -v --force initramfs-(uname-r-result).img (uname-r-result) 	--> to regenerate intiramfs files
+5. reboot machine
+
+
+----If grub.conf or both initramfs files deleted------
+In this case we can't see grub menu to login so follow below steps to fix it.
+1. boot os with img file which we have used to install os
+2. select troubleshoot option
+3. continue (to boot machine usiing /mnt/systroot)
+4. get the shell option
+chroot /mnt/sysimage				--> we use chrooting to chnage in os files
+grub2-install <device i.e /dev/sda>		--> to install grub2 directory
+grub2-mkconfig -o /boot/grub2/grub.conf		--> to generate grub.conf
+touch /.autorelabel				--> relabel selinux context
+exit
+
+
+-----Recover VMLinuz files--------------
+If VMLinuz file got corrupted or deleted from /boot then follow below steps to recover
+1. login to system using grub menu rescue option
+2. cd /boot
+3. reinstall VMLinuz package 		--> cd /os-img/baseOS/packages/kernel-core-4*
+dnf -y reinstall kernel-core-4*.rpm
+4. reboot machine
+
+
+----If both VMLinuz and rescue VMLinuz deleted-------
+1. boot through iso image
+2. select troubleshoot option
+3. select 2nd option centos system
+4. select continue (/mnt/sysroot)
+5. cd /mnt/install/baseOS/packages/
+6. reinstall VMLinuz package 		--> cd /os-img/baseOS/packages/kernel-core-4*
+dnf -y reinstall kernel-core-4*.rpm
+7. touch /mnt/sysroot/boot/.autorelabel
