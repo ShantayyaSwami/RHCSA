@@ -1111,7 +1111,7 @@ stratis pool destroy stratis_pool1				---> to destroy the startis pool
 
  
 
-Day55: Set up disk encryption usng LUKS in Linux (like BitLocker in windows)
+Day55: Set up disk encryption usng LUKS(utility) in Linux (like BitLocker in windows)
 LUKS --> linux unified key setup. used to encrypt the data on disk. 
 dnf list installed | grep cryptsetup			--> checking LUKS utility package installed or not. if not then install it
 
@@ -1232,11 +1232,11 @@ mkinitrd -v --force initramfs-(uname-r-result).img (uname-r-result) 	--> to rege
 5. reboot machine
 
 
-----If grub.conf or both initramfs files deleted------
+----If grub.conf deleted------
 In this case we can't see grub menu to login so follow below steps to fix it.
 1. boot os with img file which we have used to install os
 2. select troubleshoot option
-3. continue (to boot machine usiing /mnt/systroot)
+3. continue (to boot machine using /mnt/systroot)
 4. get the shell option
 chroot /mnt/sysimage				--> we use chrooting to chnage in os files
 grub2-install <device i.e /dev/sda>		--> to install grub2 directory
@@ -1258,8 +1258,77 @@ dnf -y reinstall kernel-core-4*.rpm
 1. boot through iso image
 2. select troubleshoot option
 3. select 2nd option centos system
-4. select continue (/mnt/sysroot)
+4. select continue (/mnt/sysimage)
 5. cd /mnt/install/baseOS/packages/
 6. reinstall VMLinuz package 		--> cd /os-img/baseOS/packages/kernel-core-4*
-dnf -y reinstall kernel-core-4*.rpm
-7. touch /mnt/sysroot/boot/.autorelabel
+rpm -ivh --root=/mnt/sysimage --replacepkgs kernal-core-4*
+7. touch /mnt/sysimage/.autorelabel
+
+
+
+--change grub timeout---
+vi /etc/default/grub
+change timeout to 25 sec
+grub2-mkconfig -o /boot/grub2/grub.cfg
+init 6
+
+
+
+-----Cleanup /boot directory-------
+dnf/yum update			--> to update the repo
+dnf/yum remove <old kernal>
+rm -f <kernal pkg + initrafs file from /boot dir>
+
+
+
+Day62: Schedule future jobs using AT
+AT 	: used for non repeatative jobs to schedule in future. one time jobs
+crontab : used to schedule repeatativ jobs
+
+rpm -q at or yum list installed at		--> to check at pckg installed or not
+systemctl status atd.service			--> to check at deamon running
+
+at <time>	--> to schedule job at perticular time. [at now +1 min]
+at>command or script > file or terminal		--> which will run on above scheduled time. can get terminal info by executing w command 
+
+atq 	or at -l 		--> to list scheduled jobs
+at -c <job no>			--> to see jobs details
+ls /var/spool/at		--> shows scheduled filed, we can chnage these files to make changes in scheduled cmmand
+
+tail /var/log/cron		--> to see cron jobs logs
+atrm <job no>			--> to remove job from at queue
+
+---scheudle jobs on diff times----
+at noon +2 min/hours/days
+at 7PM +60 days		or at 7PM +2 months
+at 00 AM 08/01/2023				--> MMDDYY
+at 9:00 AM -f script.sh	> /dev/pts/0		--> print script output on terminal 
+at 01 AM -M					--> mail the output. use -m to mail if command failed
+at -t 202307120130				-- at -t yyyymmddhhmm 
+
+
+----------crontabs-------------
+powerful utility to schedule non + repeatative jobs 
+rpm -q crontabs				--> to check crontab pakge
+systemctl status crond.service		--> make sure cron daemon is running 
+
+* * * * * 		--> 1st (*): minute(0-59)	2nd: hour(0-23)		3rd: day of month(1-31)		4th: month(1-12)	5th: day of week(0-6) 0-Sunday
+crontab -e		--> edit crontab press i
+37 9 * * * echo "Shantayya is smart guy" > /dev/pts/0  
+@reboot echo "Shantayya is smart guy" > /dev/pts/0		--> use @ to specify when it should execute
+
+crontab -l 		--> shows cron jobs available based on username. 
+crontab -l -u <username>	--> must have sudo access to list other usrs cron jobs
+ls /etc/cron.*		--> shows cron dir in which jobs enries happen
+
+cat /etc/cron.deny	--> we can limit users to schedule jobs by makeing user entries in this file.
+
+ls /etc/anacrontab	--> this file is used to schedule jobs using anacron utility on machine which dont run 24X7
+crontab -r		--> to remove cron jobs for self account. append -u <username> to remove cron jobs for other users.
+
+------few cron entries------
+*/2 * * * * 		--> every 2 min
+* */2 * * * 		--> every 2 hrs
+0 2 * * * 		--> daily at 2am (*--> means every)
+0 5,17 * * * 		--> daily twice at 5AM and 5PM
+
