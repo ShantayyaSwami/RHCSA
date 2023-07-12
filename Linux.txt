@@ -1289,7 +1289,7 @@ rpm -q at or yum list installed at		--> to check at pckg installed or not
 systemctl status atd.service			--> to check at deamon running
 
 at <time>	--> to schedule job at perticular time. [at now +1 min]
-at>command or script > file or terminal		--> which will run on above scheduled time. can get terminal info by executing w command 
+at command or script > file or terminal		--> which will run on above scheduled time. can get terminal info by executing w command 
 
 atq 	or at -l 		--> to list scheduled jobs
 at -c <job no>			--> to see jobs details
@@ -1329,6 +1329,76 @@ crontab -r		--> to remove cron jobs for self account. append -u <username> to re
 ------few cron entries------
 */2 * * * * 		--> every 2 min
 * */2 * * * 		--> every 2 hrs
-0 2 * * * 		--> daily at 2am (*--> means every)
+0 2 * * *  		--> daily at 2am (*--> means every)
 0 5,17 * * * 		--> daily twice at 5AM and 5PM
+0 1 1 1,5,8 *		--> only in Jan,May and Aug
+0 17 * * 0,5 		--> every sunday and friday. 
+0 2 1-7 * * [ `date + \%u` = 7]	&& cmnd --> 1st sunday of every month. 1-7 represents 1st week
+
+* * * * *
+* * * * *  sleep 30; 		--> every 30 sec
+
+use ; to schedule multiple tasks
+@yearly			--> every year
+@monthly 		--> every month
+@weekly, @daily, @reboot 
+
+crontab -l > backupfile.txt 			--> take crontab backup
+crontab backupfile.txt				--> restore cron jobs
+
+ 
+
+Day66: Resource monitoring, management and troubleshooting (CPU,N/W,RAM,STORAGE)
+---cpu----
+top, free -g, free -s 3 --> to update result every 3 sec
+watch -d<delay> -n<no.> 4<sec> cmnd		--> to repeat command every 4 sec. [watch -d -n 4 free -g]
+mpstat			--> shows cpu utilization. -P ALL --> for each core utilization
+
+---RAM----
+lsof 		--> list of open files. 
+lsof -p <pid>	--> to see open files by pid
+lsof -i :port_no	--> to list files opened on port number
+lsof -u <username>	--> list files with username 
+
+
+----storage---
+iostat		--> used to check input output details. for this to work system should have sysstat package. 
+chroot	--> its creates an env(shell) through which we can access root fs directories. 
+
+
+
+Day67: package management 
+.deb	: extension for debian based packages. --> dpkg, aptitude, apt-get --> comands used to install packages. 
+.rpm	: extension for rhel based packages. ---> rpm,yum, dnf	--> utility used to install packages. 
+
+repo	: collection of software and its documentation at central place. 
+
+
+---debin pkg managemnt-----
+dpkg -l		--> shows list of packages installed on machine
+dpkg -S rsync	--> to see files installed as part of rsync pkg
+dpkg -i httpd	--> to install pkg. -r --> to remove it
+
+Note: only issue with dpkg utility is user have to manually keep track of package dependacies.
+
+apt-get	update/upgrade	--> update pkgs + upgrade makes further enhancement in pkg version plus functionality.
+ls /var/cache/apt/archive	--> location where packages are downloaded.
+apt-get search rsync		--> search pkg in downloads dir
+apt-get install rsync		--> install rsync pkg. remove --> for un install  purge	--> to remove pkg with its conf file.
+
+ls -rt /etc/apt/sources.list	--> contains online repostory urls
+add-apt-repository	<url>	--> to add new online repo
+or
+apt-key add <url> 	
+
+
+---fedora pkg management-----
+rpm -qa	| grep samba		--> query all pkg with name samba
+-qi				--> query installed : used to see deatailed info of pkg
+-i 				--> to install pkg
+-e				--> to erase pkg
+-Uvh				--> upgrade pkg. v-verbose h-hash(completion %)
+
+ls /var/lib/rpm			--> keeps track of installed pkg(metadata)
+rpm2cpio pkg | cpio -t		--> to list archive file containts
 
