@@ -1391,6 +1391,9 @@ add-apt-repository	<url>	--> to add new online repo
 or
 apt-key add <url> 	
 
+apt-get install alien		--> alien pkg used to convert rpm to deb pkg. Note: but necessary that converted pkg will work. 
+alien --to-deb <rpm pkg name> 
+
 
 ---fedora pkg management-----
 rpm -qa	| grep samba		--> query all pkg with name samba
@@ -1401,4 +1404,155 @@ rpm -qa	| grep samba		--> query all pkg with name samba
 
 ls /var/lib/rpm			--> keeps track of installed pkg(metadata)
 rpm2cpio pkg | cpio -t		--> to list archive file containts
+
+Note: issue with rpm utility is that it cannot solve dependancy by itself. 
+
+dnf(RHEL8): advanced version of yum + faster + consumes less memory than yum + written in python 
+yum --> to fix dependancy issue in rpm. 
+
+dnf list pkg		--> to search pkg 
+dnf list installed	--> installed pkges 
+dnf install/remove pkg	--> to install or remove pkg
+dnf update/upgrade
+dnf grouplist		--> to list groups of pkgs
+dnf groupinstall "grouppkg name"	--> install pkg in groups
+
+ls /etc/yum.repos.d/		--> contains repos(dir with .repo ext) having online repo urls
+
+
+---install any tool on linux using source code---
+wget <tool tar ball url>
+tar xvf <tool tar bal> 
+cd <tool>
+./configure  	--> to configure the tool according to env
+make 	    	--> to compile tool
+make install	--> to install compiled tool
+
+
+
+Day68: Configure local YUM/DNF repository
+dnf config-manager --add-repo=file:///localrepo/BaseOS/		--> configure repo locally . --add-repo=<path/url>
+
+yum repolist all		--> to see repo list
+--install epel repo---
+epel : extra pkg enterprise linux
+wget <epel repo url> 
+dnf install <epel pkg>
+
+createrepo	-->  used to create repo dir from scratch where repodata dir will create accordng to machine
+
+----repo file contents----
+name=
+metadata_expire=-1	--> -1 means never
+gpgcheck=1		--> to check all packages authenticity. to disable-0 
+enabled=1		--> to enable repository. 0-disable
+baseurl=file:///localrepo/BaseOs/		--> repo path or url
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+
+----create repo manually-----
+create local repo manullay
+1. cd /etc/yum.repos.d
+2. vi local.repo 	
+name=BaseOS
+metadata_expire=-1	--> -1 means never
+gpgcheck=1		--> to check all packages authenticity. to disable-0 
+enabled=1		--> to enable repository. 0-disable
+baseurl=file:///localrepo/BaseOs/		--> repo path or url
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+3. dnf repolist all		--> shows local available repo
+
+
+
+
+Day70: Network Management
+interfaces:
+ens160	: bridged network adaptor
+lo	: loopback address specified in NIC card.
+virbr0	: used to create further virtual network
+
+Network modes:
+Host-only	: VM will be assigned one IP. its accessible only on mahcine where vm running. not by other machine.
+NAT		: just like home network with wirelss router. vm wil be assigned in separate subnet. 
+bridged		: VM will be in the same network as your host. if your host IP is 172.16.120.45 then your vm wil be like 172.16.120.50. it can be accessed by all computers in host n/w.
+
+mode		VM -> Host	Host-> VM	VM <-> VM	VM-> LAN/NET	NET/LAN --> VM
+host-only	+		+		+		-		-		
+bridged		+		+		+		+		+
+NAT	 	+		Port forward	-		+		port forward
+
+nmcli dev status		--> shows available n/w adaptor status
+nmcli con show		--> shows connected adaptors
+
+ip addr or ip a or ifconfig		--> to see the Ip details of n/w adaptors.
+
+/etc/sysconfig/network-scripts	: contains adaptor files(added automatically when you add new adaptor connection). below are few files propeties
+BOOTPROTO=dhcp/None
+ONBOOT=YES
+
+nmcli add con type ethernet con-name <con name> <adaptr name>		--> when you add new adaptor. we have to make it active(connected status) by this command. IP will be assign by DHCP
+nmcli connecton down/up <adaptor name>  or ifdown/ifup <adaptr name> 			--> to bring adaptor in connected/disconnect state 
+
+
+nmcli con mod <con-name> connection.autoconnect yes/no			--> to auto connect or not. you can also update adaptor file and add ONBOOT=YES/NO 
+nmcli con mod <con-name> connection.permissions user:<, separted username> 	--> to provide user permisison to modify nmcli settings.
+
+nmcli con reload		--> reload all connections
+nmcli con delete <con-name>	--> to remove adaptor device from machine
+
+
+nmtui		--> also works like nmcli. however its graphical interface to make changes
+open /etc/sysconfig/network-scripts/<adaptor files> 		--> to make adaptor changes.
+
+
+------assign static IPv4/IPv6 address on machine-----------
+nmcli add con type ethernet con-name <con-name> ifname <adaptor name> ip4 <IP> gw4 <gateway ip>	--> to assig IP statucally to any adaptor
+
+nmcli connection modify <con name> +ipv4.addresss <Ip> +ipv4.dns <dns>		--> to add multiple IP to existng conn  add (-ipv4) to remove 
+
+hostnamectl set-hostname <new hostname>		--> to change hostname
+
+
+
+
+--------NIC Teaming(Link aggregation)/Network bonding-------------
+Link aggregation(combining more than 2 NIC cards) refers to verious methods of aggregating multiple network connections in parallel in order to increase throughput beyond what a single connnection could sustain.
+and to provide redundancy in case of link fail. 
+
+NIC Teaming also called as load balancing failover(LBFO), bandwidth aggregation, traffic failover and so on.
+Terminologies:
+Teamd	: nic teaming daemon that uses the libteam library to communicate with team devices vie linux kernal.
+Teamctl : utility allows users to control teamd instance.  You can check and change the port status as well as swicth between active and backup states.
+runner	: units of code written in JSON and used for implementation of NIC teaming. (exmaple of runner mode: round robin,load balancing,active backup, boradcast)
+
+Note: we can have upto 32 NIC in one server.
+
+1. add 2 NIC adaptor in machine
+2. nmcli dev status				--> shows adaptors in machine
+3. nmcli add connection type team con-name team0 ifname team0 config '{"runner":{"name":"activebackup"}}'		--> create NIC teaming 
+4. nmcli con show			--> shows connections in system
+5. nmcli connection modify team0 ipv4.addresses 192.168.227.440/24 ipv4.dns 8.8.8.8 connection.autoconnect yes ipv4.method manual	--> assigning IP to team
+6. nmcli add connection type team-slave con-name ifname team0-part1 ens224 master team0     --> adding 1st salve to NIC teaming 
+7. nmcli add connection type team-slave con-name ifname team0-part2 ens225 master team0	    --> adding 2nd slave to NIC teaming 
+8. nmcli connection reload			--> reload added configurations
+9. nmcli connection up team0/team0-part1/team0-part2
+
+
+ 
+Day73: What is routing and Manage routing table 
+routing(layer3) is the process of selecting path for traffic in network. 
+1. static routing: manual entries. (disadvantage: admin should have topology knowladge)
+2. default routing : send packets to next hop( no matter to which n/w packet belongs)
+3. dynamic routing: adjustment of the route according to current route in routing table. (-ve: consume more bandwidth + less secure than static)
+
+netstat -rn	or route -n	--> to see routing table
+ip route add <ip/24> via <gateway/next hop ip> dev ens160		---> add new entry to rout table. use del to delete route entry
+
+cd /etc/sysconfig/network-scripts
+vi route-<adaptername>							---> to service reboot when you add entries to route table 
+<destination ip> via <gateway Ip>						/pro/net/route		is the file responsible for routing table
+
+nmcli connection reload
+systemctl restart NetworkManager
+
 
