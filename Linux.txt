@@ -1490,7 +1490,7 @@ ip addr or ip a or ifconfig		--> to see the Ip details of n/w adaptors.
 BOOTPROTO=dhcp/None
 ONBOOT=YES
 
-nmcli add con type ethernet con-name <con name> <adaptr name>		--> when you add new adaptor. we have to make it active(connected status) by this command. IP will be assign by DHCP
+nmcli add con type ethernet con-name <con name> <adaptr name>		--> when you add new adaptor. we have to make it active by this command. IP will be assign by DHCP
 nmcli connecton down/up <adaptor name>  or ifdown/ifup <adaptr name> 			--> to bring adaptor in connected/disconnect state 
 
 
@@ -1522,8 +1522,8 @@ and to provide redundancy in case of link fail.
 NIC Teaming also called as load balancing failover(LBFO), bandwidth aggregation, traffic failover and so on.
 Terminologies:
 Teamd	: nic teaming daemon that uses the libteam library to communicate with team devices vie linux kernal.
-Teamctl : utility allows users to control teamd instance.  You can check and change the port status as well as swicth between active and backup states.
-runner	: units of code written in JSON and used for implementation of NIC teaming. (exmaple of runner mode: round robin,load balancing,active backup, boradcast)
+Teamctl : utility allows users to control teamd instance.  You can check and change the port status as well as switch between active and backup states.
+runner(mode)	: units of code written in JSON and used for implementation of NIC teaming. (exmaple of runner mode: round robin,load balancing,active backup, boradcast)
 
 Note: we can have upto 32 NIC in one server.
 
@@ -1532,8 +1532,8 @@ Note: we can have upto 32 NIC in one server.
 3. nmcli add connection type team con-name team0 ifname team0 config '{"runner":{"name":"activebackup"}}'		--> create NIC teaming 
 4. nmcli con show			--> shows connections in system
 5. nmcli connection modify team0 ipv4.addresses 192.168.227.440/24 ipv4.dns 8.8.8.8 connection.autoconnect yes ipv4.method manual	--> assigning IP to team
-6. nmcli add connection type team-slave con-name ifname team0-part1 ens224 master team0     --> adding 1st salve to NIC teaming 
-7. nmcli add connection type team-slave con-name ifname team0-part2 ens225 master team0	    --> adding 2nd slave to NIC teaming 
+6. nmcli add connection type team-slave con-name team0-part1 ifname  ens224 master team0     --> adding 1st salve to NIC teaming 
+7. nmcli add connection type team-slave con-name team0-part2 ifname  ens225 master team0	    --> adding 2nd slave to NIC teaming 
 8. nmcli connection reload			--> reload added configurations
 9. nmcli connection up team0/team0-part1/team0-part2
 
@@ -1555,4 +1555,118 @@ vi route-<adaptername>							---> to service reboot when you add entries to rout
 nmcli connection reload
 systemctl restart NetworkManager
 
+
+
+Day74: Network Sniffing and ssh configuration 
+The process of monitoring all the data packets passing through network connections is called sniffing. 
+wireshark	--> utility used to monitor connections
+tcpdump tcp port 22			--> to check packets passing over tcp port 22
+
+
+rpm -qa | grep openssh			--> utility used for ssh connection
+systemctl status sshd			--> sshd daemon should always be running to work ssh
+
+cat /etc/hosts				--> If want to use server name instead of IP then put entry in /etc/hosts
+
+ssh username@IP command			--> execute command on server without logging into it. 
+
+--password less auth---
+vi server.txt
+server1
+server2
+server3
+
+for i in 'cat server.txt'; do ssh root@$i ssh-copy-id -i ~/.ssh/id_rsa.pub root@$i done;
+
+-------Welcome banner---------
+1. pre-login	: when we do ssh, banner shows before we put password and enter into server.
+vi /etc/ssh/banner.txt
+Welcome to Server1
+
+vi /etc/ssh/sshd_config
+uncomment banner line
+banner <banner file path>		--> banner /etc/ssh/banner.txt 
+
+systemctl restart sshd
+
+2. post-login
+edit /etc/motd	file for post login banner
+
+
+----disable root login through ssh------
+cat /etc/ssh/sshd_config
+permitRootLogin  yes/no				--> make it No to disable root login to enhanve security
+
+
+-------change default ssh port--------- 
+To avoid unahtourised access or secure it from attacker.
+
+1.  update port number in /etc/ssh/sshd_config file
+port 5152
+2. update ssh port entry in firewall
+firewall-cmd --list-all				--> list firewall settings 
+firewall --permanent --add-port=5152/tcp	--> add ssh port in firwall 
+3. to relload firewall settings
+firewal-cmd --reload
+4. update se linux entries
+semanage port -l | grep ssh				--> to see selinux ssh port 
+cat /etc/ssh/sshd_config | grep semanage	--> to check selinux syntax to add port number
+semanage port -a -t ssh_port_t -p tcp 5152 
+5. systemctl restart sshd
+6. test ssh with 5152 port 
+ssh user@server -p 5152
+
+
+---Allow/Deny seleted user/group to login via ssh------
+allow	: if we put selected user then only that perticular user can login through ssh. other users(including root) will be denied. 
+vi /etc/ssh/sshd_config
+AllowUsers user1 user2			--> allow only user1 and user2
+DenyUsers  user3 user3			--> selected deny
+
+systemctl restart sshd
+
+AllowGroups <grp name>			--> use group allow or deny if have to allow or deny multiple users.
+DenyGroups  <grp name>	
+
+
+-----Allow/Deny access from selected IP/Network through ssh--------
+TCP wrappers	: works only in RHEL 7
+
+/etc/hosts*	--> below 2 files are used to allow or deny access from perticular IP 
+hosts.allow
+hosts.deny
+
+vi /etc/hosts.deny
+<service>:<IP>
+sshd:192.168.0.198		--> cannot ssh from this IP. [sshd 192.168.0.0/24 --> to deny whole network subnet]
+
+systemctl restart sshd		--> restart denied service	
+
+Note: If we denied whole network and we also wants to provide access to single machine from that network then put that entry in hosts.allow.
+hosts.allow file overrides hosts.deny file entries
+
+TCP wrappers does not work in RHEL8
+
+----RHEL8 uses sshd_service to allow/deny access from IP---
+vi /etc/ssh/sshd_config
+DenyUsers *@192.164.0.198			--> deny all users frm this IP. [DenyUsers *@192.164.0.*]	--> deny all users from whole nmetwork
+
+Note: DenyUsers entry overrides AlloUsers enrty in RHEL 8
+
+
+--------Configure ssh login alert notification-----------
+dnf install -y mailx sendmail			--> these 2 utilities are imp to send mail alerts
+systemctl enable/start sendmail
+
+cd <enter>					--> goto user home directory for which user we have to configure mail service 
+vi .bashrc
+echo ALERT - ROOT login on shell "$HOSTNAME" on `date` `who` | mail -s "Alert: ROOT login detected" <mailID>
+
+source .bashrc
+mail						--> to check mail inbox
+tail /var/log/maillog				--> to see logs
+
+
+
+ 
 
