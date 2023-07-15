@@ -1668,5 +1668,57 @@ tail /var/log/maillog				--> to see logs
 
 
 
- 
+Day82: Reset forgotten root password
+1. select first option in grub menu and press e			[in RHEL9 select rescue option]
+2. select line where linux has been written and go to end of line. replace rhgb quit with rd.break enforcing =0
+3. ctl+x
+4. mount -o remount,rw /sysroot		--> remounting sysroot from read only fs to rw mode. (single user mode)
+5. chroot /sysroot
+6. passwd 				--> chnage root password
+7. touch /.autorelabel
+8. exit					--> exit chroot env
+9. exit and enter to boot system	--> exit maintenance mode 
+
+
+-------Set or remove GRUB password------------
+If you have forgotten the root password, But if you can see GRUB options then one can easly recover root password. 
+what if attacker change root password if one get access to BOOT menu? so to increase security of system. 
+
+1. it prevents access to single user mode
+2. unauthorized access to system 
+3. prevents access to GRUB console
+
+----set GRUB password
+1. cat /etc/grub.d/10_linux | grep gnu-linux
+2. remove --unresticted from class= line
+sed -i "/^CLASS=/s/ --unrestricted//" /etc/grub.d/10_linux 
+3. ls /boot/grub2/				--> if we dont have grub password set then we wont see user.cfg file here
+4. grub2-setpassword				--> set grub password
+5. ls /boot/grub2/				--> can see user.cfg file
+6. grub2-mkconfig -o /boot/grub2/grub.cfg	--> let kernal know grub changes
+
+
+---remove grub password
+1. add --unrestricted in  gnu-linux line in /etc/grub.d/10_linux file
+2. remove user.cfg from /boot/grub2/
+3. grub2-mkconfig -o /etc/grub.d/10_linux			--> make grub changes permanent
+
+or 
+vi /etc/grub2.cfg
+comment for loop of password_pbk
+shutdown -r now
+
+Note: If you forgot both grub + root password then boot with iso image and do chrooting to reset grub password. 
+
+
+Day84: Automate backup using rsync and cron
+yum list installed rsync
+dnf install -y rsync
+rsycn -v source/* destination/ --progress		--> to backup source to destination 
+rsycn -av -e ssh source/* root@IP:/destination/		--> -a archive -e remote shell	copy backup on remote machine
+  
+
+
+Day85: Firewall
+
 
