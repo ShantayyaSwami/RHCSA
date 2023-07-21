@@ -1736,3 +1736,121 @@ Firewall is the process used to manage and monitor in-coming and out-poing traff
 					⌄							⌄
 			   kernal(netfilter module)					kernal(netfilter module)
 
+commenly used ports:
+SSH	: 22
+Telnet 	: 23
+FTP/SFTP: 20/21
+SMTP	: 25
+DNS	: 53
+HTTP(s)	: 80/443
+DHCP	: 67/68
+POP3	: 110
+
+dnf install -y firewalld firewall-config
+systemctl start/stop/enable firewalld
+
+firewall-cmd --state			--> shows firewallc0md status
+firewall-cmd --get-default-zone		--> get default zone being used 
+
+firewall-cmd --list-all			--> shows firewall configuration 
+firewall-cmd --get-services		--> shows default services firewall knows
+firewall-cmd --zone=public(if deafult then not needed) --permanent --add-service=http (this service should be there in firewall services list)	--> add new service to firewall. --remove-service(for removal)
+
+firewall-cmd --reload			--> eload firewall settings
+firewall-cmd --zone=home  --change-interface=ens160	--> change the zone an interface belongs to 
+firewall-cmd --get-active-zones		--> list active zones
+
+ls /usr/lib/firewalld/		--> contains network scripts
+ls /etc/firewalld/		--> contains all dir copies from /ur/lib/firewalld. firewall.conf --> file used to change firewall conf globally
+
+cd /etc/firewalld/services/	
+vi <service_name>.xml		--> to add new services to firewall-list but to add that services we need to run --add-srvice=<service_name> command
+
+firewall-cmd --permanent --add-port=80/tcp	--> add service by port number. --remove-port(to remove port)
+firewall-cmd -permanent --add-forward-port=port=80:proto=tcp:toport=8080 		--> port forwarding
+
+firewall-cmd --permanent --add-masquerade	--> to enable masquerading servive
+firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=192.168.16.12		--> masqeurading(only work on ipv4)
+
+Note: basic difference between iptables and firewall-cmd is you have to stop existing firewall rules before you add new one. otherwise firewall-cmd --reload will wipe out existing firewall rules and only accept newly added. 
+but this is not the case in RHEL7/8
+
+firewall-cmd --permanent --add-rich-rule 'rule family="ipv4" source address="192.168.16.16" port port=22 protocol=tcp reject'	--> reject traffic from IP
+
+firewall-cmd --permanent --add-rich-rule 'rule family="ipv4" source address="192.168.16.16" service name=ssh or port port=23 limit value=1/m accept'	--> accept telnet only from perticular IP with limit connection per min.
+
+firewall-cmd --permanent --add-rich-rule 'rule protocol value=icmp reject'		--> reject ping from all sources.
+
+icmp --> network later protocol used by n/w devices to diagnose network connectivity issue. (ping or telnet) 
+firewall-cmd --permanent --add-icmp-block=echo-request			--> to disable icmp acknowladgement. ping will not work 
+
+firewall-cmd --enable-panic		--> block all network traffic in case of emergency
+ 
+
+Note: Make sure to reload firewall-cmd after every fiewall configuration.
+
+
+
+Day87: Security enhanced linux (SELINUX)
+added security layer works on mandatory access control(MAC) mechanism in linux kernal to make linux very secured and different from other os. 
+selinux implement MAC mechanism(as per predefine rules. enforced or no)in kernal, checking for allowed permissions after std discretionary access control(DAC) are checked. bydefault enabled in fedora. 
+SeLinux security = Role based access control(RBCA) + type enforcement(TE) + multilevel security(MLS)
+terminologies in selinux:
+objects		--> dir or files
+subjects	--> process or user
+
+total 3 modes of selinux:
+1. enforced	: Selinux denies access based on policy defined. 
+2. permissive	: does not deny access but denail access are logged in logs for actions that would have been denied if running in enfored mode.  
+3. Disable	: Only DAC rules are used. 
+
+getenforce	--> used to check selinux mode
+setenforce 0/1	--> 0-permissive	1-enforced
+
+SELinux context: process and files are labelled with an selinux context that contains additional info like 
+selinux user,role,type and securty level etc. when running selinux all this info used to make acl dicisions. 
+
+SELinux user:role:type:level	--> syntax
+user	: its user identity mapped to selinux roles to apply ACL
+role	: attribute part of RBAC. domains --> roles --> selinux users.
+type	: type enforcement decides domain for processes.
+level	: attribute of MLS (sensitivity(s0):category-set(c0-c1023))
+
+ls -Z filename			--> -z shows selinux settings
+ls -dZ dirname			--> shows selinux settings on dir
+ps -eZ pid			--> shows process selinux info
+id -Z				--> user selinux info. by default unconfined
+sestatus			--> shows selinux status
+semanage login -l		--> shows local user mapping with selinux user info
+
+tail /var/log/audit/audit.log		--> selinux logs
+
+selinux policy:
+1. Targeted policy: default selinux policy used in fedora. whe used, processes that are targeted run in confined domain else run in unconfined domain.
+subjects running in unconfined domain cannot allocate writable memory and execute it to avoid vulnerability attack. 
+
+confined processes: almost all the processes that listen on network like sshd,ftp is confined in fedora. (avoid attacks) confine processes run in its own
+domain. Even if attacker gets control of confined process then domage will be minimul bcz confined process cannot access other domains. 
+
+unconfined processes: If unconfined process gets compromized then attacker can access any other process running in system.
+processes started by systemd or which does not use network run in unconfined domain. 
+unconfined_service_t	--> if process started by init
+kernal_t		--> process started by kernal
+unconfined_t		--> started by linux user
+
+chcon -t <service type> <service/object>	--> change context temporarily. [chcon -t bin_t httpd] making httpd to run as unconfined process. 
+restorecon service/object			--> restore context of server [restorecon httpd]
+
+
+confined user: by default selinux users are unconfined. However we can confined them due to security restrictions. confined users are restricted by selinux
+rules explicitely defined in current security policy. 
+seinfo -u/-r		--> shows selinux users + roles. setools-console utility requires. 
+
+useradd -Z selinux_role username	--> by default users are unconfined. but can make them confined using this command. 
+semanage login -m -s user_u -r s0 __default__		--> modifying __default__ selinux user as confined. so whenever new local user created in linux it wil be confined under __default__ selinux user.
+semanage login -m -s unconfined_u -r s0 __default__	--> make all new users unconfined. 
+
+semanage boolean -l		--> check sem linux user permissions bollean status. thorugh this booleans only we can restrict permissions. 
+setsebool -P ssh_sysadm_login on/off	--> provide ssh access to sysadmin if on(confined user)
+
+
