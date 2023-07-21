@@ -1720,5 +1720,19 @@ rsycn -av -e ssh source/* root@IP:/destination/		--> -a archive -e remote shell	
 
 
 Day85: Firewall
-
+Firewall is the process used to manage and monitor in-coming and out-poing traffic from network. 
+	       RHEL6				RHEL7						RHEL8
+		GUI			GUI			CLI			GUI		CLI	
+	 	⌄			 ⌄			 ⌄			 ⌄		 ⌄
+	 	⌄			 ⌄		 	 ⌄			 ⌄		 ⌄
+	    system-config-firewall	firwall-config	     firewall-cmd	firewall-config    firewall-cmd (package)
+	       ⌄					⌄					⌄
+	       ⌄					⌄					⌄
+	iptables(daemon service)		firewalld(service)			firewalld(service)
+					⌄							⌄
+					⌄							⌄
+				     iptables						    NFTABLES(packet filter mechanism)
+					⌄							⌄
+					⌄							⌄
+			   kernal(netfilter module)					kernal(netfilter module)
 
