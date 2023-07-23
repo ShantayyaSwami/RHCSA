@@ -1793,7 +1793,7 @@ Note: Make sure to reload firewall-cmd after every fiewall configuration.
 
 Day87: Security enhanced linux (SELINUX)
 added security layer works on mandatory access control(MAC) mechanism in linux kernal to make linux very secured and different from other os. 
-selinux implement MAC mechanism(as per predefine rules. enforced or no)in kernal, checking for allowed permissions after std discretionary access control(DAC) are checked. bydefault enabled in fedora. 
+selinux implement MAC mechanism(as per predefine rules. enforced or no)in kernal, checking for allowed permissions after std discretionary access control(DAC) are checked. by default enabled in fedora. 
 SeLinux security = Role based access control(RBCA) + type enforcement(TE) + multilevel security(MLS)
 terminologies in selinux:
 objects		--> dir or files
@@ -1807,14 +1807,14 @@ total 3 modes of selinux:
 getenforce	--> used to check selinux mode
 setenforce 0/1	--> 0-permissive	1-enforced
 
-SELinux context: process and files are labelled with an selinux context that contains additional info like 
+SELinux context(or label): process and files are labelled with an selinux context that contains additional info like 
 selinux user,role,type and securty level etc. when running selinux all this info used to make acl dicisions. 
 
 SELinux user:role:type:level	--> syntax
 user	: its user identity mapped to selinux roles to apply ACL
 role	: attribute part of RBAC. domains --> roles --> selinux users.
 type	: type enforcement decides domain for processes.
-level	: attribute of MLS (sensitivity(s0):category-set(c0-c1023))
+level	: attribute of MLS (sensitivity(s0-s15):category-set(c0-c1023))
 
 ls -Z filename			--> -z shows selinux settings
 ls -dZ dirname			--> shows selinux settings on dir
@@ -1823,14 +1823,14 @@ id -Z				--> user selinux info. by default unconfined
 sestatus			--> shows selinux status
 semanage login -l		--> shows local user mapping with selinux user info
 
-tail /var/log/audit/audit.log		--> selinux logs
+tail /var/log/audit/audit.log		--> selinux logs(auditd.services runs at background) 
 
 selinux policy:
 1. Targeted policy: default selinux policy used in fedora. whe used, processes that are targeted run in confined domain else run in unconfined domain.
 subjects running in unconfined domain cannot allocate writable memory and execute it to avoid vulnerability attack. 
 
 confined processes: almost all the processes that listen on network like sshd,ftp is confined in fedora. (avoid attacks) confine processes run in its own
-domain. Even if attacker gets control of confined process then domage will be minimul bcz confined process cannot access other domains. 
+domain. Even if attacker gets control of confined process then damage will be minimul bcz confined process cannot access other domains. 
 
 unconfined processes: If unconfined process gets compromized then attacker can access any other process running in system.
 processes started by systemd or which does not use network run in unconfined domain. 
@@ -1844,13 +1844,64 @@ restorecon service/object			--> restore context of server [restorecon httpd]
 
 confined user: by default selinux users are unconfined. However we can confined them due to security restrictions. confined users are restricted by selinux
 rules explicitely defined in current security policy. 
-seinfo -u/-r		--> shows selinux users + roles. setools-console utility requires. 
+seinfo -u/-r		--> shows selinux users + roles. setools-console utility requires(audit selinux logs). 
 
 useradd -Z selinux_role username	--> by default users are unconfined. but can make them confined using this command. 
 semanage login -m -s user_u -r s0 __default__		--> modifying __default__ selinux user as confined. so whenever new local user created in linux it wil be confined under __default__ selinux user.
 semanage login -m -s unconfined_u -r s0 __default__	--> make all new users unconfined. 
 
-semanage boolean -l		--> check sem linux user permissions bollean status. thorugh this booleans only we can restrict permissions. 
-setsebool -P ssh_sysadm_login on/off	--> provide ssh access to sysadmin if on(confined user)
+semanage boolean -l		--> check selinux user permissions bollean status. through this booleans only we can restrict permissions. 
+setsebool -P ssh_sysadm_login on/off	--> provide ssh access to sysadmin if on(confined user) -P: permanently 
+
+
+rpm -qi policycoreutils			--> utility required for basic basic operations of selinux systems
+rpm -qi selinux-policy			--> this is base package for SELinux reference policy
+rpm -qi selinux-policy-targeted 	--> SeLinux reference policy targeted base module
+rpm -qi libselinux			--> provides api for selinux applications 
+rpm -qi libselinux-utils		--> contains utilities (avcstat,getenforce,getsebool etc)
+rpm -qi libselinux-python		--> required python bindings for selinux applications
+rpm -qi selinux-policy-devel		--> provides custom selinux policy and policy modules.
+rpm -qi selinux-policy-mls		--> to use multilevel security
+rpm -qi settroubleshoot-server		--> used to troubleshoot selinux issues. 
+rpm -qi policycoreutils-python		--> semanage,audit2allow,chcat etc
+rpm -qi policycoreutils-gui		--> if want to manage selinux through gui
+
+2. minimum	: modification of targeted policy. only selected processes are potected.
+3. mls		: multi-level security protection. use sensitivity and category pair values to define confidentiality level. If we use mls then even root
+can't have all the access. it can only access things defined in selinux for root user. 
+
+cat /etc/selinux/config		--> file contains policy info and its modes. to change selinu mode permanently 
+
+chcon -t <service type> <service/object>		--> temporaily change context of service or object
+semanage fcontext -a -t samba_share_t /etc/file		--> make entry in selinux policy. but implement post restart
+restorecon -v /etc/file					--> make changes permanently by implementing policy doc
+
+semanage fcontext -a -t samba_share_t "/web(/.*)?" 	--> change selinux type of all files specified under dir. use -d to delete selinux context
+restorecon -v /web/*					--> relabel selinux context. 
+
+semanage port -l			--> list ports managed by selinux
+semanage port -a -t ssh_port_t	-p tcp 5555	--> to add 5555 as ssh port in selinux. use -d instead of -a to delete rule in selinux
+touch /.autorelabel			--> it reset selinux changes made though chcon and service reboot  
+
+cp file /dir				--> change seliux context of file to seliux context of dir
+cp --preserve=context file /dir		--> preserves selinux context of file even after copying under dir.
+
+
+---enable selinux mls-----
+1. dnf install -y settools-console
+2. edit /etc/selinux/config
+make mode=permissive 		--> from enforcing
+3. touch "F" >>/.autorelabel	--> to reset selinux changes
+4. reboot
+5. getenforce to see the change 
+
+
+
+
+
+
+
+
+
 
 
