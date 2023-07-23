@@ -1897,11 +1897,48 @@ make mode=permissive 		--> from enforcing
 
 
 
+Day88: SSH Port forwarding or tunneling 
+SSH port forwarding allows you to forward otherwise insecure tcp traffic inside secure ssh tunnel from source to destination.(can be used for FTP,HTTP,SMTP,
+TELNET etc)
+provide encryption + authentication + must create new ssh for tunneling 
+1. local port forwarding: create local port that is connected to remote service.
+2. remote		: forward a port on remote server on internet to local port. executing command from remote machine for local 
+3. dynamic 		: used tp bypass firewall. used SOCKS protocol proxy port
 
 
+--local port forwarding between 2 servers---
+webserver: http service running on port 80
+local server: ssh -f -N -L localhost:5555:<webserver ip>:80 root@<webserverip> 		--> you can see port forwadring process running on local machine.
+
+---local port forwarding with 3 servers-----
+webserver: http service running on port 80
+gateway server: 
+local server: ssh -f -N -L localhost:5555:<webserver ip>:80 root@<gateway IP>
+
+------local port forwarding with 3 servers using gateway port-----
+webserver: http service running on port 80
+gateway server: firewall-cmd --permanent --add-port=5555/tcp  + firewall-cmd --reload
+local server: ssh -g -f -N :5555:<webserver ip>:80 root@<webserver ip>
 
 
+--Remote port forwarding between 2 servers---
+webserver: http service running on port 80
+webserver: ssh -f -N -R localhost:5555:<webserver ip>:80 root@<local server IP>
 
+
+----Dynamic port forwarding-----
+webserver: http service running on port 80 buts blocked by firewall
+local machine: ssh -f -N -D localhost:5555:<webserver IP>:80 root@<webserver IP>
+	       curl --proxy socks5h://localhost:5555 http://<webserver IP>:80 
+
+
+-----------Shell Scripting-----------------
+cat /etc/shells or chsh	-l 		--> shows shell list
+chsh	--> enter shell to be used	--> change default shell
+echo ''		--> print as it is
+echo ""		--> print value 
+echo -e "HEll\nShantayya"		--> use -e if want to use \
+#!/bin/bash				--> shebang line tells interpreter that which shell we are using 
 
 
 
