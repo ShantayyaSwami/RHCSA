@@ -1932,6 +1932,7 @@ local machine: ssh -f -N -D localhost:5555:<webserver IP>:80 root@<webserver IP>
 	       curl --proxy socks5h://localhost:5555 http://<webserver IP>:80 
 
 
+Day89:
 -----------Shell Scripting-----------------
 cat /etc/shells or chsh	-l 		--> shows shell list
 chsh	--> enter shell to be used	--> change default shell
@@ -1939,6 +1940,69 @@ echo ''		--> print as it is
 echo ""		--> print value 
 echo -e "HEll\nShantayya"		--> use -e if want to use \
 #!/bin/bash				--> shebang line tells interpreter that which shell we are using 
+
+# 	: comment
+$	: to print value of variable
+export var=		--> to globally define the variable
+
+----read operator---
+read name		--> to take single input from user
+read name1 name2 name3 name3	--> take multiple inputs from user
+read -p 'Enter user Name' name	--> input cursor stays in same line 
+read -sp 'Enter password' pass	--> take silent input
+
+echo "Enter user names"
+read -a  names	--> take multiple inputs(space separated) as array
+
+read 
+echo "Entered name is $REPLY"		--> If we dont provide any variable with read then value stored in REPLY variable. 
+
+---Passing the argument in script----
+system reserve variables used temporarilty to hold value ($1,$2,$3 etc)
+
+vi script.sh 
+#!/bin/bash
+echo $1 $2 $3 $4
+
+./script.sh hi how are you?
+
+instead of system reserve variabes we can use args array: 
+args=("$@")
+echo ${args[0]} ${args[1]} ${args[2]} ${args[3]}	or echo $@			--> it will print 4 arguments 
+
+echo $#				--> shows number of arguments passed
+
+---Coditional statement-----
+string comparison operator:
+[ "$a" == "$b" ]
+[ "$a" != "$b" ]
+[[ "$a" < "$b" ]] use [[ ]] for <,>,<=,>= string operator.
+
+integer comparsion operator:
+[ "$a" -eq/ne/lt/le/gt/ge "$b" ]
+("$a" </> "$b")
+(( "$a" <= "$b" )) or (( "$a" >= "$b" ))
+
+echo -e "Enter name of file: \c" 	--> -e used in echo to use \ char and -c to keep cursor at same place. 
+read num1 num2
+if [ $num1 -eq $num2 ]
+then
+ echo "Num1 is equa t num2"
+elif [ $num1 -gt $num2 ]
+then
+  echo "Num1 greater than num2" 
+else
+ echo "Num1 less than num2"
+fi
+
+----File test operator-------
+[ -e $filename ]	--> -e means exists or not. -f means regular ile or not. -d means directory or not, -b means block file or not, -c char file or not. -s empty file or not. 
+-r file has read perm or not, -w file has write perm or not, -x file has execute perm or not. 
+
+
+
+
+
 
 
 
