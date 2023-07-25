@@ -1999,10 +1999,75 @@ fi
 [ -e $filename ]	--> -e means exists or not. -f means regular ile or not. -d means directory or not, -b means block file or not, -c char file or not. -s empty file or not. 
 -r file has read perm or not, -w file has write perm or not, -x file has execute perm or not. 
 
+----Nested If condition-----
+echo -e "Enter file name: \c"
+read filename
+if [ -f $filename ]
+then
+	if [ -w $filename ]
+	then	
+		echo "Please enter text here and press ctl + d to exit"
+		cat >> $filename
+	else
+		echo "$filename does not have write access"
+	fi
+else
+	echo "$filename does not exist"
+fi
 
 
+----Logical AND operator-----&&, ||
+echo -e "Enter your age: \c"
+read age
+if [ "$age" -gt 18 ] && [ "$age" -lt 40 ]
+then
+	echo "Age is valid"
+else
+	echo "Age is not valid"
+fi
+
+echo -e "Enter your age: \c"
+read age
+if [ "$age" -le 18 ] || [ "$age" -ge 40 ]
+then
+	echo "Age is valid"
+else
+	echo "Age is not valid"
+fi
 
 
+-----Arithmatic operator on integers-----
+$((operation)) or $( expr $num1 operator $num2 )  --> to use * with expr use \* [ $( expr $num1 \* $num2 )]
+echo "sum is $((2+3))"
+
+----Arithmatic operation on decimal numbers---
+bc	--> basic calculator. this utility is required to execute bc command.
+echo "2/3" | bc
+echo "scale=2;2/3" | bc		--> use scale=number for decimal places
+echo "scale=2;sqrt(10)" | bc -l	--> use -l(library) with bc for advanced operation.
 
 
+Day119: AWK command
+awk is mostly used for pattern matching and processing + data transformation. 
+syntax:
+awk options 'selection_criteria {action}' input_file > output_file
 
+vi employee.txt
+Shantayya  Manager  Accounts  50000
+Shankar    Manager  Sales     100000
+Somnath    Master   Operation 500000
+Vir        Head	    Account   1500000
+
+awk '{print}' filename		--> print file details like cat
+awk '/Manager/ {print}' employee.txt	--> print nly Managers
+awk '{print $1 $4}' employee.txt	--> print 1st and 4th col. or use NF(number of fields) [awk '{print $1,$NF}' employee.txt]
+awk '{print NR,$0}' employee.txt	--> use NR to show record numbers $0 for all records
+awk 'NR==3, NR==4 {print NR,$0}' employee.txt	--> record 3 to 4
+awk 'END {print NR}' employee.txt	--> print last record number. to see hw many lines are there in file. 
+
+use for loop in awk
+awk 'BEGIN { for(i=1;i<=6;i++) print "Square of" i, "is", i*i; }' 
+
+awk -F ":" '{print $1}'	/etc/passwd		--> default separator is space in awk.we can use diff separator using -F field.
+awk -F "\" '/^\// {print $NF}' /etc/shells	--> print shell names only
+awk 'length($0) < 8' /etc/shells		--> print records length less than 8
