@@ -2071,3 +2071,16 @@ awk 'BEGIN { for(i=1;i<=6;i++) print "Square of" i, "is", i*i; }'
 awk -F ":" '{print $1}'	/etc/passwd		--> default separator is space in awk.we can use diff separator using -F field.
 awk -F "\" '/^\// {print $NF}' /etc/shells	--> print shell names only
 awk 'length($0) < 8' /etc/shells		--> print records length less than 8
+
+
+----Pattern Matching-----------
+<	: matching begining of word
+>	: matching end of word
+[:alnum:] or [a-zA-Z0-9]
+[:digit:] or [0-9]
+[:punct:] 
+{m}	: matching exact count	{m,}	: matching atleastt m count	{m,n}	: matching preceding regex m to n times
+cat input | grep -o [0-9]* 	--> -o means only matching pattern
+
+
+
