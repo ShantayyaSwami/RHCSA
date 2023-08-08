@@ -1058,6 +1058,12 @@ Note: fs should not be mounted to check fs. below options are used with fsck
 -A	: to check all fs in system in order specified in fstab
 -R	: exclude root fs
 
+-----Limit the process on user level-----
+ulimit -a		--> shows current limits for core file size, data seg size, file size, open files, pipe size, stack size, CPU time, max user processes, virtual memory, and more.
+
+ulimit -u <limit>
+/etc/security/limit.conf	--> file used to set up user limits permanently. file contains 
+<domain-user/uid,group/gid> <type-soft/hard> <item-resources like nproc for process> <value>
 
 
 Day53: Virtual data optimizer(VDO) volume
