@@ -1760,7 +1760,7 @@ firewall-cmd --get-default-zone		--> get default zone being used
 
 firewall-cmd --list-all			--> shows firewall configuration 
 firewall-cmd --get-services		--> shows default services firewall knows
-firewall-cmd --zone=public(if deafult then not needed) --permanent --add-service=http (this service should be there in firewall services list)	--> add new service to firewall. --remove-service(for removal)
+firewall-cmd --zone=public(if deafult then not needed) --permanent --add-service=http or {http,nfs}(this service should be there in firewall services list)	--> add new service to firewall. --remove-service(for removal)
 
 firewall-cmd --reload			--> eload firewall settings
 firewall-cmd --zone=home  --change-interface=ens160	--> change the zone an interface belongs to 
@@ -2089,4 +2089,149 @@ awk 'length($0) < 8' /etc/shells		--> print records length less than 8
 cat input | grep -o [0-9]* 	--> -o means only matching pattern
 
 
+------------RHEL8(cloud ready) -----------------------
+Cockpit: web based server management tool   --> its not a service rather socket service which works 2 way. Its very powerful tool to manage linux machine from anywhere. 
+dnf install -y cockpit
+systemctl enable cockpit.socket --now		--> start abd enable cockpit socket
+firewall-cmd --list-all				--> to check cockpit service is added in firewall 
+IP:9090						--> to access cockpit server
 
+Note: We can also monitor multiple hosts. you just have to ad host in cockpit. Cockpit is RHEL8 exclusive feature. 
+
+---------------KVM-------------------------
+kernal based virtual machine  --> utility through which we can convert machine into hypervisor. 
+grep -e 'vmx' or 'svm' /proc/cpuinfo			--> to cheeck machine supports virtualization or not. 
+
+----------Using image builder(composer)--------
+from the package we can create ready to deploy images and deploy anywhere. 
+
+---------system tuning profiles----------
+tuned ---> is daemon service used to perform auto tuning of linux machine. it monitor the performance of machine and suggest best tuning profile. 
+1. static tuning	--> tuned applies kernal parameters as per the tuned profile selected. 
+2. dynamic tuning	--> Continuosly monitor system and changes system settings as per work load. 
+
+dnf install -y tuned			--> tuned already installed if os installed with server with GUI mode. 
+ls /etc/tuned				--> shows tuned configuration files. usually we dont change directly.
+ls /usr/lib/tuned			--> shows tuned profile files 
+systemctl enable --now tuned		--> start tuned service
+tuned-adm active			--> usd to see active tuned profile
+tuned-adm list				--> list of tuned prfiles
+tuned-adm profile <profile-name>	--> like balanced,virtual-guest,accelerator-performance etc
+tuned-adm recommend			--> to see tuned profile suggestion 
+tuned-adm off				--> to disable tuned profile. if we execute tuned-adm active --> it will say no active profile currently.   
+
+we can create custom tuned profile.
+1. create prrifle name directory under /usr/lib/tuned/
+2. mkdir test-performance
+3. cd test-performance
+4. vi tuned.conf	--> add
+[main]
+include=latency-performance
+summary=this wil increase performance. 
+5. tuned-adm list		--> will show new custome tuned profile. 
+
+
+
+------configure NFS---------------
+dnf install -y nfs*				--> utility required to configure nfs(nfs-utils,nfs4-acl-tools etc)
+systemctl enable --now nfs-server.service 	--> to start and enable nfs service. 
+netstat LISTEN | grep 2049			--> to check nfs port opened or not
+
+create nfs 
+1. mkdir /mnt/nfs_share/doc
+2. chown -R nobody: /mnt/nfs_share/doc		--> nobody is normal user. not prilivaged one. so purpose of nobody to allow anyone to log inot system. default login shell /sbin/nologin
+3. chomod -R 777 /mnt/nfs_share/doc		--> providing full permision as every user can create file
+4. systemctl restart nfs-utils.service
+5. vi /etc/exports				--> configure nfs
+/mnt/nfs-share/doc	client IP/subnet-mask(rw,sync,no_all_squash,root_squash)
+
+sync		: write data to disk first and then reflect
+no_all_squash	: same username and groupname will be used. if username not present in client or server then ID will show
+root_squash	: root can't have separate privilage. even if root change something then username and groupname will by nobody only. (no_root_squash --> root can do anything)
+6. exportfs -arvf	--> to implement nfs configuration
+7. firewall-cmd --permanent --add-service=nfs		--> add nfs service in firewall
+8. firewall-cmd --permanent --add-service=rpc-bind + mountd	--> rpc-bind works as supportive nfs service. it redirects client to correct server port. mountd used to mount nfs at client server locally 
+9. firewall-cmd --reload
+
+--client side
+mkdir /mnt/nfs_share
+mount -t nfs nfsIP:/mnt/nfs_share/doc /mnt/nfs_share
+df -hT
+
+
+AutoFS	--> used for on-demand mounting of nfs
+follow same steps untl 9
+client side:
+1. dnf install nfs-utils nfs4-acl-tools,autofs -y
+2. mkdir -R /automount/private /automoubt/public		--> on nfs server(vi /etc/exports				
+/public		client IP/subnet-mask(ro,sync)
+/private	clientIP/network(rw,sync)
+3. vi /etc/auto.master
+/automount(mount point on client machine)	/etc/automount.txt (file having nfs mounting details)	--timeout=30(sec)
+4. vi /etc/automount.txt
+public	-ro,sync	nfs-ip:/public
+private	-rw,sync	nfs-ip:/private
+5. systemctl enable --now autofs
+6. df -hT				--> it will not show you nfs mount point. once you cd /automount	then it will show mount points	
+
+ACL on nfs --> iin nfs2,nfs3 acl was not allowed however acl can be applied on nfs4. normal acl commands does not work on nfs acl. 
+we use ACE(access control entries)
+[access type]:[flags]:[principal]:[permissions]
+1. access(A) or deny(D)
+2. D: inheriting permision on directory, F: file,
+3. entity like user or group
+4. permissions r,w,x etc
+ 
+Note: to use acl on nfs we must specifiy do user,roup mapping through no_all_squash in automount.txt file at server side. 
+nfs4_getfacl <filename>
+nfs4_setfacl -a A::1000(uid):RWX cal.txt	or nfs4_setfacl -e filename	--> to edit acl permissions 
+
+
+----------Nginx----------------
+web server can be used as reverse proxy(server side),load balancer,http cache and mail proxy etc
+1. create nginx repo
+[nginx]
+name: nginx package
+baseurl:https://nginx.org/packages/centos/8<os version>/$basearch
+pgcheck=0
+enabled=1
+
+sudo yum undate
+sudo yum install -y nginx
+sudo systemctl enable --now nginx
+
+/etc/nginx/nginx.conf			--> nginx configuration file
+/usr/share/nginx/html			--> pages from this location wil get served when requested. 
+/var/log/nginx				--> logs related to nginx
+
+firewall-cmd --permanent --add-service={http,https}
+firewall-cmd --reload
+
+Note: proxy server can be categories as forward proxy(client side) and reverse proxy(server side) 
+------configure nginx as proxy:
+vi nginx.conf
+http--> server--> 
+location /{
+ # proxy_pass <destination serverIP:port
+   proxy_pass http://127.0.0.1/8080;
+}
+systemctl restart nginx
+getsebool -a | grep httpd		--> get https related selinux configurations
+setsebool httpd_can_network_connect on -P	--> enable selinux httpd connectvity 
+
+
+---configure nginx as load balancer:
+vi nginx.conf
+http--> server--> 
+upstream notes<lb name>{			--> add this directory
+	server server1:7010
+        server server2:7010
+        server server3:7010
+ }
+
+location /{
+ # proxy_pass <destination lb name>
+   proxy_pass http://notes;
+}
+
+sudo nginx -t		--> to check any typos in nginx.conf
