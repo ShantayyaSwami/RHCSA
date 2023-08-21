@@ -9,8 +9,8 @@ supports podman for containarizaton	by default supports docker
 
 
 Linux			vs		Unix
-Linus dev from Linux			denies richie and ken thomsan
-dev by modifying unix kernal		dev from scratch for motorola, HP etc
+Linus dev Linux				denies richie and ken thomsan
+by modifying unix kernal		dev from scratch for motorola, HP etc
 					was not possible to use at home due to high memory and RAM size
 flavor:					linux, MacOS, SunSolaris etc derived from Unix
 fedora: Redhat and CentOS(free)
@@ -71,7 +71,7 @@ If you want to permanently use env variables then define in .bashrc file
 
 set: shows env varibales in system
 unset <var> : to unset env variable
-echo $PS1 : PS1 is shell env variable shows how the perticular shell prompt looks like. [sh shell shows [u@host tild]# or $]. we can change shell prompt using PS1 variable
+echo $PS1 : PS1 is shell env variable shows how the perticular shell prompt looks like. [sh shell shows [u@host ~]# or $]. we can change shell prompt using PS1 variable
 like PS1 = 'Hello Shantayya' then aftr logging to shell you will see [hello Shantayya]:cursor
 PATH: var used by shell to check where the camnds binaries are. 
 SHLVL: used to see level of shell. [example: if you executed zsh inside bash shell then you will on 2nd level] we can use shell inside shell
@@ -197,7 +197,7 @@ if we dont want to limit admin permisions user wise, we can put all users in gro
 passwd file has 7 columns: <user><encryption passwd stored in /etc/shadow file><user id><grp id><user display name or desciption><home dir><default shell>
 <default shell>: we can define /sbin/nologin/ to make the account as service acocunt so user can't login
 
-ideal way to add user: useradd -m <modify> -d <home dir default perm 700> -c <display name> username
+ideal way to add user: useradd -m <modify> -d <home dir default perm 700> -c <display name> -s <shell> username
 Here we have created user with only homedir + display name but /etc/passwd contains default shell,uid,gid etc so that information stored in /etc/default/useradd or useradd -D to check default entries
 we can modify these setting
 
@@ -289,7 +289,7 @@ max default permission on any file=666<user><grp><other>		--> system does not gi
 
 max default permission on any directory = 777<user><grp><other>		--> without execute permission user can't access dir + make sure with execute we give read access otherwise its of no use. 
 (max perm)  - UMASK  = effective permission on new directories
-  777	    - 022    = 755 (rwx-r-xr-x)
+  777	    - 022    = 755 (rwxr-xr-x)
 
 mkdir -m <perm> dirname 	 	: used to create dir with permission. 
 cp -rp <dir or file> <destination>	: preserve permisisons while copying
@@ -607,7 +607,7 @@ Note: Before lvm restoration, dir should be unmounted.
 
 Day36: Merging and splitting Volume Groups
 We have created 2 lvms in 2 separate Volume Groups.
-while creating lvm we have used -l because we are not giving total lvm size. we use <extends> to create lvm in linux. defaults extents is 4MB in linux.
+while creating lvm we have used -l because we are not giving total lvm size. we use <extents> to create lvm in linux. defaults extents is 4MB in linux.
 lvcreate -l 1000 -n <lvmname> <vgname>		--> here 1000 X 4MB extents we are creating which is 4GB LVM. this means in lvm we can divide lvm in 4,4MB area.
 
 
@@ -770,7 +770,7 @@ pvck /dev/sba1  --> used to check physical volume consistancy
 pvchange -an /dev/sda1   --> used to change lvm attributes. like activate, disable pv etc
 
 vgrename/lvrename oldname  newname	--> to rename vg/lv
-lvs -a -o +devices		--> used to lvm details alonhg with devices 
+lvs -a -o +devices		--> used to lvm details along with devices 
 
 
 To remove partition --> 
@@ -1045,6 +1045,14 @@ xfs_quota -x -c "timer -p<project> -b<block> 10days" /dir		--> reduce grace peri
 xfs_quota -x -c "off/disable/enable -pugv" /dir				--> disable/enable quota for project,user and group v-verbose. use off for permanent disable.
 
 
+-----Limit the process on user level-----
+ulimit -a		--> shows current limits for core file size, data size, file size, open files, pipe size, stack size, CPU time, max user processes, virtual memory, and more.
+
+ulimit -u <limit>
+/etc/security/limit.conf	--> file used to set up user limits permanently. file contains 
+<domain-user/uid,group/gid> <type-soft/hard> <item-resources like nproc for process> <value>
+
+
 
 Day52: Check and repair FS
 fsck,e2fsck(ext fs), xfs_repair(xfs fs)	--> used to check and repair fs.fsck is wrapper on e2fsck. e2fsck was used to chk ext2 fs but later extended to ext3,4.
@@ -1057,13 +1065,6 @@ Note: fs should not be mounted to check fs. below options are used with fsck
 -n	: dont repair error
 -A	: to check all fs in system in order specified in fstab
 -R	: exclude root fs
-
------Limit the process on user level-----
-ulimit -a		--> shows current limits for core file size, data seg size, file size, open files, pipe size, stack size, CPU time, max user processes, virtual memory, and more.
-
-ulimit -u <limit>
-/etc/security/limit.conf	--> file used to set up user limits permanently. file contains 
-<domain-user/uid,group/gid> <type-soft/hard> <item-resources like nproc for process> <value>
 
 
 Day53: Virtual data optimizer(VDO) volume
@@ -1147,7 +1148,7 @@ vi /etc/fstab
 mount -a
 
 
-cryptsetup kulsClose myfiles					--> close encrypted disk
+cryptsetup luksClose myfiles					--> close encrypted disk
 cryptsetup luksRemoveKey	/dev/sdb			--> remove key from disk
 cryptsetup luksRemove myfiles					--> remove encrypted fs 
 cryptsetup luksChangeKey	/dev/sdb			--> if want to change key which is used to encrypt disk
@@ -1228,11 +1229,11 @@ grub2-mkconfig		--> after updating above files we run this to make changes in gr
 
 init 6 or systemctl reboot 		--> reboot machine
 
------If we get kernal panic error due to initramfs file corrupt ot deletion-----
+-----If we get kernal panic error due to initramfs file corrupt or deletion-----
 1. use grub menu to login through rescue  mode
 2. cd /boot 	--> to check initramfs file deleted or corrupted
 3. uname -r	--> to check os version
-4. dracut -v <initramfs-paste above result.img> <above result>	--> to create initramfs file use -f to override in case corrupt
+4. dracut -v <initramfs-(paste above result).img> <above result>	--> to create initramfs file use -f to override in case corrupt
 or 
 mkinitrd -v --force initramfs-(uname-r-result).img (uname-r-result) 	--> to regenerate intiramfs files
 5. reboot machine
@@ -1369,7 +1370,7 @@ lsof -u <username>	--> list files with username
 
 ----storage---
 iostat		--> used to check input output details. for this to work system should have sysstat package. 
-chroot	--> its creates an env(shell) through which we can access root fs directories. 
+chroot	--> it creates an env(shell) through which we can access root fs directories. 
 
 
 
@@ -1413,7 +1414,7 @@ rpm2cpio pkg | cpio -t		--> to list archive file containts
 
 Note: issue with rpm utility is that it cannot solve dependancy by itself. 
 
-dnf(RHEL8): advanced version of yum + faster + consumes less memory than yum + written in python 
+dnf(RHEL8-dandified yum): advanced version of yum + faster + consumes less memory than yum + written in python 
 yum --> to fix dependancy issue in rpm. 
 
 dnf list pkg		--> to search pkg 
@@ -1448,6 +1449,7 @@ dnf install <epel pkg>
 createrepo	-->  used to create repo dir from scratch where repodata dir will create accordng to machine
 
 ----repo file contents----
+[label]
 name=
 metadata_expire=-1	--> -1 means never
 gpgcheck=1		--> to check all packages authenticity. to disable-0 
@@ -1522,8 +1524,7 @@ hostnamectl set-hostname <new hostname>		--> to change hostname
 
 
 --------NIC Teaming(Link aggregation)/Network bonding-------------
-Link aggregation(combining more than 2 NIC cards) refers to verious methods of aggregating multiple network connections in parallel in order to increase throughput beyond what a single connnection could sustain.
-and to provide redundancy in case of link fail. 
+Link aggregation(combining more than 2 NIC cards) refers to verious methods of aggregating multiple network connections in parallel in order to increase throughput beyond what a single connnection could sustain. and to provide redundancy in case of link fail. 
 
 NIC Teaming also called as load balancing failover(LBFO), bandwidth aggregation, traffic failover and so on.
 Terminologies:
@@ -1556,7 +1557,7 @@ ip route add <ip/24> via <gateway/next hop ip> dev ens160		---> add new entry to
 
 cd /etc/sysconfig/network-scripts
 vi route-<adaptername>							---> to service reboot when you add entries to route table 
-<destination ip> via <gateway Ip>						/pro/net/route		is the file responsible for routing table
+<destination ip> via <gateway Ip>						/proc/net/route		is the file responsible for routing table
 
 nmcli connection reload
 systemctl restart NetworkManager
@@ -2235,3 +2236,6 @@ location /{
 }
 
 sudo nginx -t		--> to check any typos in nginx.conf
+
+
+----------DNS-------------
