@@ -2238,4 +2238,85 @@ location /{
 sudo nginx -t		--> to check any typos in nginx.conf
 
 
-----------DNS-------------
+----------Linux Patching-------------
+patches are new lines of code released to fix the existing bugs,introduce new features and improve performance etc
+Standard patching procedure:
+1. check for patch updates i.e dnf check-update;dnf repolist all
+2. check for system downtime with teams
+3. raise change request through serviceNow 
+4. collect pre-check infor and document them 
+
+#!/bin/bash
+
+echo -e "Date information" >>/home/swami/"pre_patch_$(date+"%d-%m-%Y").txt"
+date >>/home/swami/"pre_patch_$(date+"%d-%m-%y").txt" 2>&1
+
+echo -e "Mounted file system" ----
+df -hT >>
+
+echo -e "Block ID infor" --
+blkid >>
+lsblk >>
+fdisk -l >>
+cat /etc/fstab >>
+vdgisplay >>
+lvdisplay >>
+multipath -ll >>
+ifconfig -a >>
+free -m >>
+uptime >>
+cat /etc/grub2.cfg >>
+ps -ef >>
+top >>
+route -n >>
+
+5. take server backup or snapshot
+6. co-ordinate with other involed teams to patch.
+7. execute above script as post-check and compare results
+8. check with teams that apps/d working as expected
+9. close change
+
+manually patching:
+dnf update <package-name> -y 
+dnf downgrade <package-name> -y		--> if want to rollback update for perticular package
+dnf history 				--> shows dnf event
+
+dnf history info <ID> 			--> to see detailed info about event you will find ID in dnf history command
+dnf history undo <ID>			--> to rollback dnf event
+
+dnf update -y				--. update all packages
+reboot
+
+
+ansible patching:
+?
+- name: Patching through ansible
+  hosts: Middleware
+  become: true
+  tasks:
+   - name: execute pre-checks
+     script: /home/swami/precheck.sh
+     args:
+      - creates: /home/swami/precheck.sh
+   - name: update packages
+     dnf: 
+       name: "*"
+       latest: yes
+     notify: Reboot machines
+
+   - name: execute post checks
+     script: /home/swami/postcheck.sh
+     args: 
+       - creates: /home/swami/postcheck.sh
+   - name: get result file names
+     shell: find /home/swami/ -type f -name "*.txt" | cut -d '/' -f2
+     register: result
+   - name: fetch checks results
+     fetch: 
+       src: /home/swami/{{ item }}
+       dest: /home/swami/
+     with_items: "{{ result.stdout_lines }}"
+  handlers:   
+   - name: reboot machines
+     reboot: 
+       reboot_timeut: 60
