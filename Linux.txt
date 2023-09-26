@@ -2320,3 +2320,26 @@ ansible patching:
    - name: reboot machines
      reboot: 
        reboot_timeut: 60
+
+
+
+----www.googgle.com-----How it works
+1. Browser Cache: The browser first checks its cache to see if it already knows the IP address of www.google.com from a previous visit. If it finds it, it can skip the DNS resolution step.
+
+2. /etc/hosts File: The browser may also look in the computer's local /etc/hosts file to see if there's a manual entry for www.google.com and its corresponding IP address.
+
+3. Local DNS: If the IP address is not in the cache and not in the /etc/hosts file, the browser checks with the local DNS resolver. This resolver can be on your computer or on your network, like your router. If it knows the IP address, it provides it; otherwise, it forwards the request to the next step.
+
+4. Root Name Server (RNS): If the local DNS doesn't know the IP address, it queries the root name server. The root name server helps identify the top-level domain (TLD) for www.google.com (in this case, the TLD is ".com").
+
+5. Top-Level Domain Name Server (TLD NS): The RNS directs the request to the appropriate TLD NS for ".com." The TLD NS can provide information about which authoritative name server (NS) is responsible for the "google.com" domain.
+
+6. Authoritative Name Server (Google's NS): The TLD NS points to Google's authoritative name server, which has the exact IP address for www.google.com.
+
+7. Connecting to Google's Load Balancer: With the IP address in hand, the browser connects to Google's load balancer. Load balancers distribute incoming requests to multiple web servers to balance the load. They use algorithms like Round Robin, Least Connection, etc., to determine which web server should handle the request.
+
+8. Web Server Response: The load balancer forwards the request to one of Google's web servers. The web server processes the request, which might involve running various programs, accessing databases, etc., to generate the Google homepage.
+
+9. Firewall and Load Balancer: The web server sends the response back to the user's browser through any necessary security measures, such as firewalls and load balancers again.
+
+10. Browser Rendering: The user's browser receives the response, interprets it, and displays the Google homepage on the user's screen.
