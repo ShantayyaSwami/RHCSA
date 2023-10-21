@@ -58,7 +58,7 @@ control operator: used to execute multiple commands
 ; : used to execute mutiple commnads serially one after other. example: date;cal;echo $SHELL
 & : execute cmnds parallely (execute cmnd in background)
 ? : its variable which stores result of last command.  stores value = 0 if last cmnd success else any random value
-&& : logical AND
+&& : logical AND (also used to execute multiple commands in sequence having dependancy on previous task)
 ||: logical OR
 #: shell ignores the cmmands written after #
 \ : whatever operator you give post \, shell will ignore that. 
@@ -80,7 +80,7 @@ env -i: used to ignore env variables exported by user.
 Shell embadding, history and options:
 `` backticks: works as $()
 !!: bang sign to execute last command
-history -c: to clear history + we can repeat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to perpanently clear history
+history -c: to clear history + we can repeat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to permanently clear history
 export HISTTIMEFORMAT='%d %m %y %T': used to set date and time for history commands + history -d <line number> : to delete perticular history command
 space cmnd: comands does not goto history but works only in debian os.
 
@@ -106,7 +106,7 @@ forcefully overrite: then use commnd >| filename
 
 Day14: Filters used in Linux
 commands which are used with | called filters. 
-tac filename: used to reverse content. (tee also worls like cat)
+tac filename: used to reverse content. (tee also works like cat)
 grep: used to search perticular string in files. -i: ignore case -v: except string  -A1/2/3: lines after string  -B1/2/3: print lines before string  -w if want to fetch one result out of many given results.
 
 passwd file has 7 columns: <user><encryption passwd><user id><grp id><user display name><home dir><default shell>
@@ -162,7 +162,7 @@ to copy or cut multiple lines use number and dd or yy then use p or P
 $: to jump to last char of line		0: to jump to start of line		d$: delete current char to last char of line.	d0: delete current char to start char of line
 G: starting page 	gg: last line of page
 J: to merge previous and current line,<cursor should be at start position before pressing J)
-ddp: swicth current and next line
+ddp: switch current and next line
 w: word by word next jump	b: backward word to word jump		dw: delete word
 /string: forward search		?string: backward search
 
@@ -191,7 +191,7 @@ su - user: completely switch to user account with pwd as home dir. using env var
 sudo: super user do
 visudo : when one update [user	ALL:ALL		NOPASSWD: ALL] then perticular user perform all commands without any password promt. if we passwd promt then remove NOPASSWD from line.
 user	ALL:ALL		NOPASSWD: ALL, !/usr/sbin/useradd	[limit command execution: user cann't execute useradd command]	
-if we dont want to limit admin permisions user wise, we can put all users in group and update sudoer permission for that group.
+if we want to limit admin permisions user wise, we can put all users in group and update sudoer permission for that group.
 
 0(root)-1000: id are preserve for system. linux allocated user id after 1000 to normal users.
 passwd file has 7 columns: <user><encryption passwd stored in /etc/shadow file><user id><grp id><user display name or desciption><home dir><default shell>
@@ -230,7 +230,7 @@ unlock user: usermod -U username 	or 	passwd -u username
 
 
 Day21: profile files
-1. system profile files: works globally : each shell (bash/ksh) source profile setting(PATH, PS1,HOSTNAME, execute /etc/inputrc(keyboard flags), /etc/bashrc etc) from /etc/profile to current env or you can put file in /etc/profile.d directory
+1. system profile files: works globally : each shell (bash/ksh) source the profile setting(PATH, PS1,HOSTNAME, execute /etc/inputrc(keyboard flags), /etc/bashrc etc) from /etc/profile to current env or you can put file in /etc/profile.d directory
 2. user profile files: works for perticular user
 
 .bash_profile: used to add $HOME to PATH and source .bashrc file + this file loads at every login. 
@@ -258,7 +258,7 @@ gpasswd -A "" <grpname> 	: 		to dismiss all admins from group
 
 
 
-Day23: File security in Lunux
+Day23: File security in Linux
 File security is managed through 
 1. standard permissons
 2. advanced permissions
@@ -331,8 +331,8 @@ Note: mask value is any max perm assigned
 Day26: Inodes,Hard and soft links 
 Note: RHL8 xfs dont have option to disable acl. this option was there in ext4 fs.
 Inode		: ds which stores file metadata except file name and content.
-hard link	: ln link_name	filename	+create separate file with same content 	+link no increases	+deleting orig file has no impact on hard link
-soft link	: ln -s link_name file		+create shortcut				+link increases		+deleing orig file makes file not accessible
+hard link	: ln filename link_name		+create separate file with same content 	+link not increases	+deleting orig file has no impact on hard link
+soft link	: ln -s filename link_name	+create shortcut				+link increases		+deleing orig file makes file not accessible
 
 
 Day27: Process Management
@@ -355,7 +355,7 @@ R	: running
 S	: interruptible sleep(waiting for an event to complete)
 T	: stopped (either by job signal or bcz its being traced)
 X	: dead (should never be seen)
-Z	: defunct(zobie) process. terminated but not reaped by parents. 
+Z	: defunct(zombie) process. terminated but not reaped by parents. 
 I	: idle state
 Along with above stat keywards, below symbols also shown,
 <	: high prioriy
@@ -381,10 +381,11 @@ fg <jobs no.>		: to bring the bgrnd process in frground.
 
 
 Day28	: Top command
+system monitoring tool and provides real-time information about systems performance. 
 <uptime> <no. of users logged in> <load average 1min:5min:15min>
 <total tasks:	running,	stopped,	zombie>			Note: processes are divided into multiple tasks.
 <%CPU	:	time spent by cpu in user space,	system space(kernal),idle state,handling hrdwr intrpts,soft intrpts,in serving other vms -steal time >
-Mib MEM	:	total,	free,	used,	buffer(writing)/cache(reading)
+Mib MEM	:	tota	l,	free,	used,	buffer(writing)/cache(reading)
 Mib Swap:	total,	free,	used,	available	Note: swap is virtual memery used by CPU beyond RAM memory. idealy same size of RAM,doubled of RAM
 <PID>	<USER>	<PR>	<NI>	<VIRT>	<RES>	<SHR>	<%CPU>	<%MEM>	<TIME>	<CMND>
 PR	: priority value of process. higher the value-less priority and vice versa. always +20 of NI
@@ -442,7 +443,7 @@ fdisk /dev/sda --> if you press m then helps you to create parition based on opt
 n --> p(primary or e-extended)--> 1(1-4 partitions) --> 2048 (default sector)-->+1G (last sector i.e size) -->enter
 if you want to chnage partition type then press t ---> to change partition type L --> select (8e for LVM type) --> w (save changes) --> enter
 
-parprobe /dev/sda or only partprobe --> let kernal read the partition changes
+partprobe /dev/sda or only partprobe --> let kernal read the partition changes
 lsblk 	--> to see partition created	(MAJ--> disk type number SCSI(8) nvme(259) MIN--> its partition no. 1/2/3 etc)
 
 
@@ -762,7 +763,7 @@ archive --> vg metadata changes are stored here. using this we can restore delet
 backup  --> stores backup of lvm
 cache  --> chached lvm content
 profile --> like user profile files, lvm profile files are stored here.
-lvm.conf --> used to conigure lvm related configurations. 
+lvm.conf --> used to configure lvm related configurations. 
 
 /var/lock/lvm  --> files which are used to prevent lvm fs corruption. 
 
@@ -1024,11 +1025,11 @@ edquota	<username>		--> to specify user quota
 edquota	-g <grpname>		--> to specify quota for grp
 9.quota <username>		--> check quota for users
 
-edquota -T <user> or -g <groupname>	--> default is 7 days. to set grace period for user or grp --> make sure you make quotaon /quotadir after this. else if made in on earlier then makde off, specify grace period an dmake it on.
+edquota -T <user> or -g <groupname>	--> default is 7 days. to set grace period for user or grp --> make sure you make quotaon /quotadir after this. else if made in on earlier then makde off, specify grace period and make it on.
 
 
 -----xfs_quota expert utility to manage quota on xfs fs---------------
-xfs_quota -x(expert) -c(commandline) report /quotadir			--> shows quota specified on /quotadir
+xfs_quota -x(expert i.e batch mode without UI) -c(commandline) report /quotadir			--> shows quota specified on /quotadir
 xfs_quota -x -c 'limit bsoft=  bhard=  <username>' /dir			--> set block quota limits for user on /dir
 xfs_quota -x -c 'limit isoft= ihard= <usr>' /dir			--> set inode quota limits for user on dir
 xfs_quora -x -c 'report bih' /dir					--> to see block and inode quota in human readable format
@@ -1122,7 +1123,7 @@ Day55: Set up disk encryption usng LUKS(utility) in Linux (like BitLocker in win
 LUKS --> linux unified key setup. used to encrypt the data on disk. 
 dnf list installed | grep cryptsetup			--> checking LUKS utility package installed or not. if not then install it
 
-cryptsetup luksFormat 	/dev/sdb			--> formatiing /dev/sdb disk for encrypting it.
+cryptsetup luksFormat 	/dev/sdb			--> formating /dev/sdb disk for encrypting it.
 cryptsetup luksOpen	/dev/sdb <name of fs on /dev/sdb>	 --> name can be anythng like myfiles etc
 cryptsetup status myfiles				--> to check fs status
 
@@ -1167,8 +1168,8 @@ POST  --> power on self test. it checks whether all the attached compoents worki
 BIOS 	--> when it gets the POST result as successful then it executes MBR by searching in boot devices (HDD,LAN,CD/DVD,USB etc).
  ⌄		 if there is any h/w issue then system fails.  
  ⌄
-MBR	--> Master boot record stored in 1st sector of booting devices.(512byes) primary boot loader information stored in 440 byes of code. its not a main boot loader.    
- ⌄		rather main boot loader sector info stored here. (primary boot loader points to GRUB2 i.e main boot loader)
+MBR	--> Master boot record stored in 1st sector of booting devices.(512byes) primary boot loader information stored in 440 byes of code. its not a main boot loader. rather main boot loader sector info stored here. (primary boot loader points to GRUB2 i.e main boot loader)
+ ⌄
  ⌄
 GRUB2	--> Grand unified loader(v2).  GRUB2 loads its conf. from /boot/grub2/grub.conf file + then provides option to select kernal from boot menu to boot machin 
  ⌄	    then loads selected/default VMLinuz kernal img from /boot/vmlinuz-4.18* + then extract contents of initramfs img frm /boot/initramfs-4.18*
@@ -1217,7 +1218,7 @@ Day57:  Set or Change default run level
 runlevel --> command to see runlevel or who -r
 systemctl get-default		--> get current permanent default target
 cat /lib/systemd/system/default-target			--> shows current target
-init <no>			--> imeediatly change run level. it has no impact on default run level
+init <no>			--> imediatly change run level. it has no impact on default run level
 
 
 ----Resolve kernal panic error------------
@@ -1362,8 +1363,8 @@ watch -d<delay> -n<no.> 4<sec> cmnd		--> to repeat command every 4 sec. [watch -
 mpstat			--> shows cpu utilization. -P ALL --> for each core utilization
 
 ---RAM----
-lsof 		--> list of open files. 
-lsof -p <pid>	--> to see open files by pid
+lsof 			--> list of open files. 
+lsof -p <pid>		--> to see open files by pid
 lsof -i :port_no	--> to list files opened on port number
 lsof -u <username>	--> list files with username 
 
@@ -1381,7 +1382,7 @@ Day67: package management
 repo	: collection of software and its documentation at central place. 
 
 
----debin pkg managemnt-----
+---debian pkg managemnt-----
 dpkg -l		--> shows list of packages installed on machine
 dpkg -S rsync	--> to see files installed as part of rsync pkg
 dpkg -i httpd	--> to install pkg. -r --> to remove it
@@ -1461,7 +1462,8 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 ----create repo manually-----
 create local repo manullay
 1. cd /etc/yum.repos.d
-2. vi local.repo 	
+2. vi local.repo
+[label] 	
 name=BaseOS
 metadata_expire=-1	--> -1 means never
 gpgcheck=1		--> to check all packages authenticity. to disable-0 
@@ -1490,7 +1492,7 @@ bridged		+		+		+		+		+
 NAT	 	+		Port forward	-		+		port forward
 
 nmcli dev status		--> shows available n/w adaptor status
-nmcli con show		--> shows connected adaptors
+nmcli con show			--> shows connected adaptors
 
 ip addr or ip a or ifconfig		--> to see the Ip details of n/w adaptors.
 
@@ -1502,7 +1504,7 @@ nmcli add con type ethernet con-name <con name> <adaptr name>		--> when you add 
 nmcli connecton down/up <adaptor name>  or ifdown/ifup <adaptr name> 			--> to bring adaptor in connected/disconnect state 
 
 
-nmcli con mod <con-name> connection.autoconnect yes/no			--> to auto connect or not. you can also update adaptor file and add ONBOOT=YES/NO 
+nmcli con mod <con-name> connection.autoconnect yes/no				--> to auto connect or not. you can also update adaptor file and add ONBOOT=YES/NO 
 nmcli con mod <con-name> connection.permissions user:<, separted username> 	--> to provide user permisison to modify nmcli settings.
 
 nmcli con reload		--> reload all connections
@@ -1514,7 +1516,7 @@ open /etc/sysconfig/network-scripts/<adaptor files> 		--> to make adaptor change
 
 
 ------assign static IPv4/IPv6 address on machine-----------
-nmcli add con type ethernet con-name <con-name> ifname <adaptor name> ip4 <IP> gw4 <gateway ip>	--> to assig IP statucally to any adaptor
+nmcli add con type ethernet con-name <con-name> ifname <adaptor name> ip4 <IP> gw4 <gateway ip>	--> to assig IP statically to any adaptor
 
 nmcli connection modify <con name> +ipv4.addresss <Ip> +ipv4.dns <dns>		--> to add multiple IP to existng conn  add (-ipv4) to remove 
 
@@ -1566,7 +1568,7 @@ systemctl restart NetworkManager
 
 Day74: Network Sniffing and ssh configuration 
 The process of monitoring all the data packets passing through network connections is called sniffing. 
-wireshark	--> utility used to monitor connections
+wireshark				--> utility used to monitor connections
 tcpdump tcp port 22			--> to check packets passing over tcp port 22
 
 
@@ -1612,7 +1614,7 @@ To avoid unahtourised access or secure it from attacker.
 port 5152
 2. update ssh port entry in firewall
 firewall-cmd --list-all				--> list firewall settings 
-firewall --permanent --add-port=5152/tcp	--> add ssh port in firwall 
+firewall-cmd --permanent --add-port=5152/tcp	--> add ssh port in firwall 
 3. to relload firewall settings
 firewal-cmd --reload
 4. update se linux entries
@@ -2336,10 +2338,57 @@ ansible patching:
 
 6. Authoritative Name Server (Google's NS): The TLD NS points to Google's authoritative name server, which has the exact IP address for www.google.com.
 
-7. Connecting to Google's Load Balancer: With the IP address in hand, the browser connects to Google's load balancer. Load balancers distribute incoming requests to multiple web servers to balance the load. They use algorithms like Round Robin, Least Connection, etc., to determine which web server should handle the request.
+7. Connecting to Google's Load Balancer: With the IP address in hand, the browser connects to Google's load balancer. Load balancers distribute incoming requests to multiple web servers to balance the load. They use algorithms like Round Robin, Least Connection, Least Time, Hash, IP Hash etc., to determine which web server should handle the request.
 
 8. Web Server Response: The load balancer forwards the request to one of Google's web servers. The web server processes the request, which might involve running various programs, accessing databases, etc., to generate the Google homepage.
 
 9. Firewall and Load Balancer: The web server sends the response back to the user's browser through any necessary security measures, such as firewalls and load balancers again.
 
 10. Browser Rendering: The user's browser receives the response, interprets it, and displays the Google homepage on the user's screen.
+
+URL: protocol://hostname:port
+
+protocl sub-domain 	 TLD	    path	query string separator	
+  ↓	↓		  ↓	      ↓            ↓
+https://www.nehraclasses.in:443/blog/article/search?docid=720&hl=en#daytwo
+		↓	     ↓				↓		↓
+		domain	    port(optional)		query		fragment(part of page)
+
+
+
+--------------TCP/IP layer-----------------
+
+Application Layer(Data)       --> data is converted into packets(HTTP) 									     Application Layer
+	↓																	     ↑	
+Transport Layer(Segment)     --> Organize the data packets and deliver with help of IP(TCP)							Transport Layer
+	↓																	     ↑
+Internet Layer(Packet)		--> Identify the receiver (IP)											Internet Layer
+	↓																	     ↑
+Network Layer(Bits)		--> hardware and ethernet. find the correct machine with IP over network and pass packets to correct machin. 	Network Layer
+        ↑																	     ↑		
+      Sender							<------ Receiver send acknowledgement	<-----					   Receiver
+
+
+Note: TCP will not work without IP. UDP is a connection less protocol and does not require IP to deliver messeges as it broadcast packets over network. 
+packets may loss in middle as sender dont get any ackowlegement from receiver. 
+
+
+-------------OSI model-----------
+open system interconnection means to connect two devises with each other. advanced later of TCP/IP model 
+
+Application Layer    -------------
+Presentatin layer		  |  --> Software layer	
+Session Layer        -------------
+Transport Layer                    ---> connects s/w with h/w layer(heart of OSI)
+Network Layer	     ------------- 
+Data Link layer			 | --> Hardware layer
+Physical layer       -------------
+
+
+Application Layer: provides user interface (all browsers + uses protocols like http,smtp,ftp etc)
+Presentation layer: translates data into character encoding schemes + compress data + encryption of data
+session layer: creates,manage and maintains session until user logout + handles error using check points in data transfer
+Transportation layer: service to service layer responsible to control data transfer + devides data into segments + makes necessary synchronizaton if sender and receiver speed differs. 
+Network Layer: converts segments into packets + selects quick path using routers
+Data Link Layer: converts packets into frames + switches and hubs operate under this layer + MAC address used to tranfer data from one system to other 
+Physical layer: converts frames into bits + if using ethernet cable --> tranfer data in electric signals, wifi--> tranfer data in radio frequency + decides unidirecti
