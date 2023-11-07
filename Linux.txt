@@ -2392,3 +2392,30 @@ Transportation layer: service to service layer responsible to control data trans
 Network Layer: converts segments into packets + selects quick path using routers
 Data Link Layer: converts packets into frames + switches and hubs operate under this layer + MAC address used to tranfer data from one system to other 
 Physical layer: converts frames into bits + if using ethernet cable --> tranfer data in electric signals, wifi--> tranfer data in radio frequency + decides unidirecti
+
+
+
+----------------DNS-----------------------------------------
+Domain name system or dns is tcp/ip service on network enabled client to translate names into IP address. 
+nslookup www.google.com		--> forward lookup query
+nslookup 8.8.8.8		--> reverse lookup query
+
+Note: client computer need to know dns server IP which is provided by DHCP or manually entered in /etc/resolve.conf file 
+
+DNS namespace: is hierarchycal tree data structure with root at top and represent . --> top level domain name(.com/.org/.in).
+FQDN: fully qualified domain name is combination of hostname of machine appended with its domain name. 
+
+A record: also called as host record which contains the IPv4 address of machine. (AAAA record-> IPv6)
+PTR record: its reverse of A record. used to resolve IP to hostname.
+SOA record: contains meta info about zone(contains domain name and its child domain names)
+CNAME record: maps hostname to hostname. used to create alias for existing hostnames.   
+
+hostnamectl set-hostname <name>			--> statically assign hostname to machine
+dnf install bind bind-utils -y			--> dns packages used on linux machine to  configure dns
+systemctl enable named --now			--> start and enable named service
+
+/etc/named.conf					--> dns related conf
+
+
+--------Apache Tomcat---------------------
+
