@@ -1588,6 +1588,7 @@ server3
 for i in 'cat server.txt'; do ssh root@$i ssh-copy-id -i ~/.ssh/id_rsa.pub root@$i done;
 
 -------Welcome banner---------
+figlet ustility used to create banner text. ex: figlet DevOps
 1. pre-login	: when we do ssh, banner shows before we put password and enter into server.
 vi /etc/ssh/banner.txt
 Welcome to Server1
@@ -2231,12 +2232,13 @@ upstream notes<lb name>{			--> add this directory
         server server2:7010
         server server3:7010
  }
-
+server{
+ listen 80;
 location /{
  # proxy_pass <destination lb name>
    proxy_pass http://notes;
 }
-
+}
 sudo nginx -t		--> to check any typos in nginx.conf
 
 
