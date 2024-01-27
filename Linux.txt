@@ -202,9 +202,11 @@ Here we have created user with only homedir + display name but /etc/passwd conta
 we can modify these setting
 
 userdel -r username: -r deletes home dir as well
-usermod -s <shell>: we can modify default shell
+usermod -s <shell>: we can modify default shell	or chsh -s /bin/sh username
 chsh -l: shows shell available in system
 chown user:group dir: to change dir ownership		chmod 700 dir
+
+usermod --no-home-create --shell /bin/false user	--> create user with no home directory and with /bin/false shell (service accounts) system user
 
 /etc/skel: this is very important dir which contains profile files. and whenever new user is created then these files are copied to new user home dir.
 you can push new features to new user accounts through this dir files.
@@ -289,7 +291,7 @@ max default permission on any file=666<user><grp><other>		--> system does not gi
 
 max default permission on any directory = 777<user><grp><other>		--> without execute permission user can't access dir + make sure with execute we give read access otherwise its of no use. 
 (max perm)  - UMASK  = effective permission on new directories
-  777	    - 022    = 755 (rwxr-xr-x)
+  777	    - 022    = 755 (rwxr-xr-xr)
 
 mkdir -m <perm> dirname 	 	: used to create dir with permission. 
 cp -rp <dir or file> <destination>	: preserve permisisons while copying
@@ -324,7 +326,7 @@ getfacl filename	: shows permissions available on file
 setfacl -m --no-mask u:<usernam>:<perm>	filename	: provid acl permission to user on file		if dont want to update effective mask value then use --no-mask in command
 setfacl -m g:<grpname>:<perm>	filename	: provide acl perm on group
 setfacl -b filename				: remove acl from file
-setfacl -x g:<grpname> <filename>		: top remove acl from group
+setfacl -x g:<grpname> <filename>		: to remove acl from group
 Note: mask value is any max perm assigned 
 
 
@@ -346,9 +348,9 @@ jobs			: command list all jobs running in bg or foregrnd.
 echo $$	or ps -C bash	or pidof shell	: shows current shell PID
 echo $PPID		: shows current shell parents PID 
  
-fork		: splitting the process into child and executing its copy. exmaple: I am on bash --> ksh starts child process --> exec bash --> use same PID and PPID
+fork	: splitting the process into child and executing its copy. exmaple: I am on bash --> ksh starts child process --> exec bash --> use same PID and PPID
 ps fx	or ps -ef		: shows process detailed info	
-<PID><TTY<STAT><TIME<CMND>
+<PID><TTY><STAT><TIME<CMND>
 STAT	: shows the current status of process
 D	: uninterruptible sleep (usually IO)
 R	: running
@@ -377,7 +379,7 @@ SIGCONT	-18	: to resume the process (kill -18 PID)
 
 pkill name	: we can stop multiple processes started with perticular name (ex: pkill sleep)
 jobs
-fg <jobs no.>		: to bring the bgrnd process in frground.
+fg <jobs no.>	: to bring the bgrnd process in frground.
 
 
 Day28	: Top command
@@ -385,7 +387,7 @@ system monitoring tool and provides real-time information about systems performa
 <uptime> <no. of users logged in> <load average 1min:5min:15min>
 <total tasks:	running,	stopped,	zombie>			Note: processes are divided into multiple tasks.
 <%CPU	:	time spent by cpu in user space,	system space(kernal),idle state,handling hrdwr intrpts,soft intrpts,in serving other vms -steal time >
-Mib MEM	:	tota	l,	free,	used,	buffer(writing)/cache(reading)
+Mib MEM	:	total,	free,	used,	buffer(writing)/cache(reading)
 Mib Swap:	total,	free,	used,	available	Note: swap is virtual memery used by CPU beyond RAM memory. idealy same size of RAM,doubled of RAM
 <PID>	<USER>	<PR>	<NI>	<VIRT>	<RES>	<SHR>	<%CPU>	<%MEM>	<TIME>	<CMND>
 PR	: priority value of process. higher the value-less priority and vice versa. always +20 of NI
@@ -407,7 +409,7 @@ process priority(total 139)	: used by kernal to schedule a task.
 Nice value: these are user space values used to control process priority values. 
 -20(Highest priority) to +19(lowest)		Note: only root user can assign minus nice values
 
-priority wise max cpu time is allocated to processes. process priority = nice value + 20
+priority wise max cpu time is allocated to processes. process priority = 20 - nice value
 0-99 are used by kernal and 100-139 used by user
 
 nice -n	num	cmand					: for new process
@@ -426,7 +428,7 @@ or
 dd if=/dev/zero of=/dev/sda  	: makes each sector or block zero 
 
 
-2. Adding block devices(SCSI(sda/sdb),SATA etc) on the go except nvme(cannot added on the go) dick type:
+2. Adding block devices(SCSI(sda/sdb),SATA etc) on the go except nvme(cannot added on the go) device type:
 ls /sys/class/scsi_host/ | while read host; | do echo  "- - -" > /sys/class/scsi_host/$host/scan ; done
 or 
 for x in `/sys/class/scsi_host/` ; do echo "------$x scanned----" echo "---" > /sys/class/scsi_host/$x/scan/ ; done
@@ -546,7 +548,7 @@ above has created physical partition
 11. lvcreate -L <logical> 3G -n<new> <lvm name> <VG name>
 
 Mount the directory on LVM
-12. mkfs.xfs or mkfx.ext4 <lvm partition name> 	[example: mkfs.ext4 /dev/mapper/LinuxVG-LinuxLV   or /dev/LinuxVG/LinuxLV]
+12. mkfs.xfs or mkfs.ext4 <lvm partition name> 	[example: mkfs.ext4 /dev/mapper/LinuxVG-LinuxLV   or /dev/LinuxVG/LinuxLV]
 13. mount /dev/LinuxVG/LinuxLV /data
 14. df -h 
 15. put entry into fstab to make it permanent
@@ -608,11 +610,12 @@ Note: Before lvm restoration, dir should be unmounted.
 
 Day36: Merging and splitting Volume Groups
 We have created 2 lvms in 2 separate Volume Groups.
+extents:  the basic unit of allocation is called an "extent." An extent is a contiguous range of physical extents on disk and is used as the building block for creating logical volumes.
 while creating lvm we have used -l because we are not giving total lvm size. we use <extents> to create lvm in linux. defaults extents is 4MB in linux.
 lvcreate -l 1000 -n <lvmname> <vgname>		--> here 1000 X 4MB extents we are creating which is 4GB LVM. this means in lvm we can divide lvm in 4,4MB area.
 
 
-lvcreate -l 1000 -n lv1 vg1			--> we are creating 2 lvms on 2 diff volume groups.
+lvcreate -l 1000 -n lv1 vg1			--> -l 1000 specifies the size in terms of extents and -L 1G specifies the size in gigabytes.
 lvcreate -l 1000 -n lv2 vg2
 
 lvs
@@ -712,7 +715,7 @@ vgcreate -s 32M thin_vg /dev/sdb1
 lvcreate -L 15G --thinpool tp_thinpool thin_vg		--> we are cerating LVM only just adding --thinpool to make it.
 
 Now we will create 3 LVM of 5G to use the pool
-lvcreate -V 5G --thin -n thinpool_clien1 thin_vg/tp_thinpool
+lvcreate -V 5G --thin -n thinpool_clien1 thin_vg/tp_thinpool			--> -V specify size of thinpool
 lvcreate -V 5G --thin -n thinpool_client2 thin_vg/tp_thinpool
 lvcreate -V 5G --thin -n thinpool_client3 thin_vg/tp_thinpool
 
@@ -1014,7 +1017,7 @@ rpm -qa quota or yum list installed quota
 vi /etc/fstab
 /dev/sda1 	/quotadir	ext4	default	0 0
 2. mount -a			--> mount quotadir on /dev/sda1
-3. mount  grep quota		--> to see whether quota enable on disk or not,we have not enabled so wont show anything.
+3. mount | grep quota		--> to see whether quota enable on disk or not,we have not enabled so wont show anything.
 4. vi /etc/fstab
 /dev/sda1 	/quotadir	ext4	default,usrquota,grpquota,prjquota	0 0
 5. mount -o remount /quotadir			--> remount 
@@ -1083,9 +1086,11 @@ lvcreate -L 50G -n vdolv1 vdovg1			--> create lv
 mkfs.ext4 -k /dev/vdovg1/vdolv1				--> format lv
 mount -o discard /dev/vdovg1/vdolv1/ /testvdo		--> used discard option to discard unused blocks from partition.
 		
+Note: VDO provides space-saving features by deduplicating and compressing data, allowing you to have a larger logical size than the physical capacity of the underlying disk. The actual physical disk usage will depend on the nature of the data being stored. If there is a lot of redundant or compressible data, VDO can achieve significant space savings.
 
 
 Day54: stratis filesystem (RHEL8 exclusive feature)
+Stratis and LVM thin pools serve similar purposes.
 default xfs fs use it + can take snapshot + thin provisioning + pool based storage mgmt + fs and storage monitoring we can do in stratis fs
 2 statis packages are needed: stratisd --> deomon services used to start stratis services 	stratis-cli --> manage stratis using cli
 
@@ -1141,7 +1146,7 @@ mv /tmp/crypt_file /etc/
 cryptsetup luksAddKey	/dev/sdb  /etc/crypt_file			--> define key should be used on which disk to encrypt. 
 vi /etc/crypttab							--> file used to mount crypted disk permanently
 <name of fs>	<disk>		<key file>
-myfile		/dev/sdb	/etc/crypt_file				
+myfile		/dev/sdb	/etc/crypt_file	  luks			
 
 vi /etc/fstab
 /dev/mapper/myfiles	/data	ext4 default 0 0
@@ -1329,7 +1334,7 @@ crontab -l 		--> shows cron jobs available based on username.
 crontab -l -u <username>	--> must have sudo access to list other usrs cron jobs
 ls /etc/cron.*		--> shows cron dir in which jobs enries happen
 
-cat /etc/cron.deny	--> we can limit users to schedule jobs by makeing user entries in this file.
+cat /etc/cron.deny	--> we can limit users to schedule jobs by making user entries in this file.
 
 ls /etc/anacrontab	--> this file is used to schedule jobs using anacron utility on machine which dont run 24X7
 crontab -r		--> to remove cron jobs for self account. append -u <username> to remove cron jobs for other users.
@@ -1371,7 +1376,7 @@ lsof -u <username>	--> list files with username
 
 ----storage---
 iostat		--> used to check input output details. for this to work system should have sysstat package. 
-chroot	--> it creates an env(shell) through which we can access root fs directories. 
+chroot		--> it creates an env(shell) through which we can access root fs directories. 
 
 
 
@@ -1389,7 +1394,7 @@ dpkg -i httpd	--> to install pkg. -r --> to remove it
 
 Note: only issue with dpkg utility is user have to manually keep track of package dependacies.
 
-apt-get	update/upgrade	--> update pkgs + upgrade makes further enhancement in pkg version plus functionality.
+apt-get	update/upgrade		--> update pkgs + upgrade makes further enhancement in pkg version plus functionality.
 ls /var/cache/apt/archive	--> location where packages are downloaded.
 apt-get search rsync		--> search pkg in downloads dir
 apt-get install rsync		--> install rsync pkg. remove --> for un install  purge	--> to remove pkg with its conf file.
@@ -1482,7 +1487,7 @@ lo	: loopback address specified in NIC card.
 virbr0	: used to create further virtual network
 
 Network modes:
-Host-only	: VM will be assigned one IP. its accessible only on mahcine where vm running. not by other machine.
+Host-only	: VM will be assigned one IP. its accessible only on machine where vm running. not by other machine.
 NAT		: just like home network with wirelss router. vm wil be assigned in separate subnet. 
 bridged		: VM will be in the same network as your host. if your host IP is 172.16.120.45 then your vm wil be like 172.16.120.50. it can be accessed by all computers in host n/w.
 
@@ -1759,7 +1764,7 @@ POP3	: 110
 dnf install -y firewalld firewall-config
 systemctl start/stop/enable firewalld
 
-firewall-cmd --state			--> shows firewallc0md status
+firewall-cmd --state			--> shows firewallcmd status
 firewall-cmd --get-default-zone		--> get default zone being used 
 
 firewall-cmd --list-all			--> shows firewall configuration 
@@ -1876,7 +1881,7 @@ rpm -qi settroubleshoot-server		--> used to troubleshoot selinux issues.
 rpm -qi policycoreutils-python		--> semanage,audit2allow,chcat etc
 rpm -qi policycoreutils-gui		--> if want to manage selinux through gui
 
-2. minimum	: modification of targeted policy. only selected processes are potected.
+2. minimum	: modification of targeted policy. only selected processes are protected.
 3. mls		: multi-level security protection. use sensitivity and category pair values to define confidentiality level. If we use mls then even root
 can't have all the access. it can only access things defined in selinux for root user. 
 
@@ -1913,7 +1918,7 @@ TELNET etc)
 provide encryption + authentication + must create new ssh for tunneling 
 1. local port forwarding: create local port that is connected to remote service.
 2. remote		: forward a port on remote server on internet to local port. executing command from remote machine for local 
-3. dynamic 		: used tp bypass firewall. used SOCKS protocol proxy port
+3. dynamic 		: used to bypass firewall. used SOCKS protocol proxy port
 
 
 --local port forwarding between 2 servers---
@@ -1956,7 +1961,7 @@ $	: to print value of variable
 export var=		--> to globally define the variable
 
 ----read operator---
-read name		--> to take single input from user
+read name			--> to take single input from user
 read name1 name2 name3 name3	--> take multiple inputs from user
 read -p 'Enter user Name' name	--> input cursor stays in same line 
 read -sp 'Enter password' pass	--> take silent input
@@ -1968,7 +1973,7 @@ read
 echo "Entered name is $REPLY"		--> If we dont provide any variable with read then value stored in REPLY variable. 
 
 ---Passing the argument in script----
-system reserve variables used temporarilty to hold value ($1,$2,$3 etc)
+system reserve variables used temporarily to hold value ($1,$2,$3 etc)
 
 vi script.sh 
 #!/bin/bash
@@ -2089,7 +2094,7 @@ awk 'length($0) < 8' /etc/shells		--> print records length less than 8
 [:alnum:] or [a-zA-Z0-9]
 [:digit:] or [0-9]
 [:punct:] 
-{m}	: matching exact count	{m,}	: matching atleastt m count	{m,n}	: matching preceding regex m to n times
+{m}	: matching exact count	{m,}	: matching atleast m count	{m,n}	: matching preceding regex m to n times
 cat input | grep -o [0-9]* 	--> -o means only matching pattern
 
 
@@ -2125,7 +2130,7 @@ tuned-adm recommend			--> to see tuned profile suggestion
 tuned-adm off				--> to disable tuned profile. if we execute tuned-adm active --> it will say no active profile currently.   
 
 we can create custom tuned profile.
-1. create prrifle name directory under /usr/lib/tuned/
+1. create profle name directory under /usr/lib/tuned/
 2. mkdir test-performance
 3. cd test-performance
 4. vi tuned.conf	--> add
@@ -2197,7 +2202,7 @@ web server can be used as reverse proxy(server side),load balancer,http cache an
 [nginx]
 name: nginx package
 baseurl:https://nginx.org/packages/centos/8<os version>/$basearch
-pgcheck=0
+gpgcheck=0
 enabled=1
 
 sudo yum undate
@@ -2376,7 +2381,7 @@ packets may loss in middle as sender dont get any ackowlegement from receiver.
 
 
 -------------OSI model-----------
-open system interconnection means to connect two devises with each other. advanced later of TCP/IP model 
+open system interconnection means to connect two devices with each other. advanced later of TCP/IP model 
 
 Application Layer    -------------
 Presentatin layer		  |  --> Software layer	
@@ -2413,11 +2418,45 @@ SOA record: contains meta info about zone(contains domain name and its child dom
 CNAME record: maps hostname to hostname. used to create alias for existing hostnames.   
 
 hostnamectl set-hostname <name>			--> statically assign hostname to machine
-dnf install bind bind-utils -y			--> dns packages used on linux machine to  configure dns
+dnf install bind bind-utils -y			--> dns packages used on linux machine to configure dns
 systemctl enable named --now			--> start and enable named service
 
 /etc/named.conf					--> dns related conf
 
 
---------Apache Tomcat---------------------
+--------------------------------IP Address---------------------------
+IP Address = Network + Host bytes. 4 octets(1 octet =8 bits=1byte) where each octet is separated by .
+ICANN assigns networks addesses to ISP. IP Address are categories into following types
+Class A: 
+Network (8 bits) + Host (24 bits) 
+rule: 1st bit of the 1st byte is 0
+range: 1-126
+No. N/w: 2^(not of network - reserved no)= 2^(8-1) = 2^7= 128-2(1st-network addr and last-broadcast addr)
+No.Host: 2^24
 
+Note: 127 is loopback address
+
+Class B:
+Network (16 bits) + Host (16 bits) 
+rule: 1st bit of the 1st byte is 1
+      2nd bit of 1st byte is 0
+range: 128-191
+No. N/w: 2^(not of network - reserved no)= 2^(16-2) = 2^14 = 16384
+No.Host: 2^24 = 65536-2 = 65534
+
+Class C: 
+Network (24 bits) + Host (8 bits) 
+rule: 1st bit of the 1st byte is 1
+      2nd bit of 1st byte is 1
+      3rd bit of 1st byte is 0
+range: 192-223
+No. N/w: 2^(not of network - reserved no)= 2^(24-3) = 2^21 = 2097152
+No.Host: 2^8 = 256-2 = 254
+
+Class D: 224-239 Reserved for multicasting (one to many) above classes are unicasting
+Class E: 240-255 Reserved for R&D department of USA
+
+Understanding network and host portions is crucial for routing and addressing in networking. The division between these two portions is determined by the class of the IP address or, in the case of Classless Inter-Domain Routing (CIDR), by the subnet mask.
+The network portion helps routers direct traffic to the appropriate destination network, while the host portion identifies specific devices within that network.
+
+In the CIDR notation 192.168.1.0/24, the first 24 bits represent the network portion, and the remaining 8 bits represent the host portion. This allows for more flexibility in defining network sizes.
