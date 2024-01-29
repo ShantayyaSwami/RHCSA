@@ -2337,7 +2337,7 @@ ansible patching:
 
 2. /etc/hosts File: The browser may also look in the computer's local /etc/hosts file to see if there's a manual entry for www.google.com and its corresponding IP address.
 
-3. Local DNS: If the IP address is not in the cache and not in the /etc/hosts file, the browser checks with the local DNS resolver. This resolver can be on your computer or on your network, like your router. If it knows the IP address, it provides it; otherwise, it forwards the request to the next step.
+3. Local DNS: If the IP address is not in the cache and not in the /etc/hosts file, the browser checks with the local DNS resolver. This resolver can be on your computer or on your network, like your router. If it knows the IP address(maintains cache), it provides it; otherwise, it forwards the request to the next step.
 
 4. Root Name Server (RNS): If the local DNS doesn't know the IP address, it queries the root name server. The root name server helps identify the top-level domain (TLD) for www.google.com (in this case, the TLD is ".com").
 
@@ -2412,10 +2412,10 @@ Note: client computer need to know dns server IP which is provided by DHCP or ma
 DNS namespace: is hierarchycal tree data structure with root at top and represent . --> top level domain name(.com/.org/.in).
 FQDN: fully qualified domain name is combination of hostname of machine appended with its domain name. 
 
-A record: also called as host record which contains the IPv4 address of machine. (AAAA record-> IPv6)
-PTR record: its reverse of A record. used to resolve IP to hostname.
+A record: also called as host record which contains the (single) IPv4 address of machine. (AAAA record-> IPv6) . provide name --> gives IP
+PTR record: its reverse of A record. used to resolve IP to hostname. (provide IP --> gives name)
 SOA record: contains meta info about zone(contains domain name and its child domain names)
-CNAME record: maps hostname to hostname. used to create alias for existing hostnames.   
+CNAME record: maps hostname to hostname. used to create alias for existing hostnames. (nick name like test.shantayya.in --> learn.shantayya.in)  
 
 hostnamectl set-hostname <name>			--> statically assign hostname to machine
 dnf install bind bind-utils -y			--> dns packages used on linux machine to configure dns
@@ -2423,6 +2423,9 @@ systemctl enable named --now			--> start and enable named service
 
 /etc/named.conf					--> dns related conf
 
+Time To Live (TTL) in DNS:
+In the context of Domain Name System (DNS), TTL refers to the amount of time a DNS record is considered valid. It is a value set in the DNS record to indicate how long a resolver or a caching server should consider the information as authoritative before it needs to be refreshed. Once the TTL expires, the resolver needs to fetch the updated information from the authoritative DNS server.
+In simple terms it represents how quickly a system can switch over from one server to another in the event of a failure.
 
 --------------------------------IP Address---------------------------
 IP Address = Network + Host bytes. 4 octets(1 octet =8 bits=1byte) where each octet is separated by .
