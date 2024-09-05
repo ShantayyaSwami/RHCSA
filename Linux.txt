@@ -80,9 +80,24 @@ env -i: used to ignore env variables exported by user.
 Shell embadding, history and options:
 `` backticks: works as $()
 !!: bang sign to execute last command
-history -c: to clear history + we can repeat perticular command with !<number from hitory> + HISTSIZE stores how many commands history can store + >.bash_history to permanently clear history
+history -c: to clear history + we can repeat perticular command with !<number from hitory> + HISTSIZE shows how many commands history can store + >.bash_history to permanently clear history
 export HISTTIMEFORMAT='%d %m %y %T': used to set date and time for history commands + history -d <line number> : to delete perticular history command
 space cmnd: comands does not goto history but works only in debian os.
+
+diable_bash_history.sh
+#!/bin/bash
+if [$# -eq 0];
+then
+echo "usage: $0 username"
+exit 1
+fi
+
+su -c "echo 'export HISTIGNORE=\"&\"' >> /home/$1/.bashrc" - $1
+Note:  & typically represents the process ID of the last background command executed in the shell. So, if you execute this command (without "" in &), the value of HISTIGNORE will be set to the process ID of the last background command, not the literal & character.
+
+chmod 744 disable_bash_history.sh
+./disable_bash_history.sh username
+
 
 File Globbing: used to dynamically generate file names: [ex: ls *file*]
 ? - one char
@@ -124,7 +139,7 @@ sed: used to manipulate file content -i:change in file directly, d: delete line 
 time cmnd: used to check how much time taken by command to execute
 tar tvf: used to see files inside tar           c:create v:verbose p:prserve permission x:untar f:file z:gz ext
 
-find <location>  -type f/d -perm <perm to search on /a:r/w/x> -iname <filename> -empty<to see empty files> -user<serach with owner> -group -mtime <+/-days> -mmin <+/- min> -atime<access time in days> -size<+/- M/G>
+find <location>  -type f/d -perm <perm to search on /a:r/w/x> -iname <filename> -empty<to see empty files> -user<search with owner> -group -mtime <+/-days> -mmin <+/- min> -atime<access time in days> -size<+/- M/G>
 if we have to execute other operation after search the use -exec cmnd {} \;  (ex: find . -type f -perm 0777 -print -exec chmod 0555 {} \;)
 
 locate: very powerful command to search faster. <use updatedb command to update index>
@@ -179,11 +194,14 @@ vim file1 file2 file3: To modify multiple files	:args to see which file we are u
 vimtutor: very powerful tool to learn vim editor.
 copy only saves last copied line where as in buffere we can save upto 36 copies. 
 
+set -x #debug mode
+set -e #Exit on error
+set -o #Exit on pipefail
 
 
 Day19: Local user management   [user entry get added to /etc/shadow, /etc/group /etc/passwd file]
 who: whoever has logged in to machine
-w: whoever is executing what command and when logged in to machine
+w: whoever is executing what command and when logged in to machine.
 id: shows user id
 su user: switching to user account temporarely (pretending to be user). it will not take you to home directory. 		
 su - user: completely switch to user account with pwd as home dir. using env variables of that user. 
@@ -207,6 +225,9 @@ chsh -l: shows shell available in system
 chown user:group dir: to change dir ownership		chmod 700 dir
 
 usermod --no-home-create --shell /bin/false user	--> create user with no home directory and with /bin/false shell (service accounts) system user
+
+sudo useradd -r -s /sbin/nologin apache			--> -r create system user
+system users need: Instead of running the Apache service under a generic user account, you create a dedicated system user for Apache:
 
 /etc/skel: this is very important dir which contains profile files. and whenever new user is created then these files are copied to new user home dir.
 you can push new features to new user accounts through this dir files.
@@ -304,8 +325,8 @@ umask -S		: shows perm symbolically
 umask -S u=rwx,go=	: set umask perm symbolically
 
 sticky bit: shows that user can only delete files owned by him in directory.  
-chmod +t dirname	: to apply sticky bit		or append 1 while executing chmod --> chmod 1777 <dirname>
-chmod -t dirname	: to remove stiky bit
+chmod o+t dirname	: to apply sticky bit		or append 1 while executing chmod --> chmod 1777 <dirname>
+chmod o-t dirname	: to remove stiky bit
 
 If other user has execute permisison then sticky bit will be t (small case) otherwise T
 
@@ -349,7 +370,7 @@ echo $$	or ps -C bash	or pidof shell	: shows current shell PID
 echo $PPID		: shows current shell parents PID 
  
 fork	: splitting the process into child and executing its copy. exmaple: I am on bash --> ksh starts child process --> exec bash --> use same PID and PPID
-ps fx	or ps -ef		: shows process detailed info	
+ps a(all)u(resource usage)x(exclude daemon)	or ps -ef		: shows process detailed info	
 <PID><TTY><STAT><TIME<CMND>
 STAT	: shows the current status of process
 D	: uninterruptible sleep (usually IO)
@@ -371,6 +392,7 @@ CMND	: which command has started this process.
 pstree -p : shows process tree with its PID
 pstree -p -u <username>	: shows processes ran by perticular user.
 
+Signal:  signals are software interrupts delivered to a running process. They are a way for processes to communicate with each other and for the system to notify processes about various events. 
 kill PID	: kills [-15 default] process. kill command has approx. 64 types of signal.(kill -l shows signal list)
 SIGHUP -1	: to reread the configuration (kill -1 1 asking systemd process to reread its configuration)
 SIGKILL -9	: asking kernal to kill it. In std kill command signal sent to process to kill but when we use -9 signal sent to kernal to kill process. Sure kill. 
@@ -388,7 +410,7 @@ system monitoring tool and provides real-time information about systems performa
 <total tasks:	running,	stopped,	zombie>			Note: processes are divided into multiple tasks.
 <%CPU	:	time spent by cpu in user space,	system space(kernal),idle state,handling hrdwr intrpts,soft intrpts,in serving other vms -steal time >
 Mib MEM	:	total,	free,	used,	buffer(writing)/cache(reading)
-Mib Swap:	total,	free,	used,	available	Note: swap is virtual memery used by CPU beyond RAM memory. idealy same size of RAM,doubled of RAM
+Mib Swap:	total,	free,	used,	available	Note: swap is virtual memory used by CPU beyond RAM memory. idealy same size of RAM,doubled of RAM
 <PID>	<USER>	<PR>	<NI>	<VIRT>	<RES>	<SHR>	<%CPU>	<%MEM>	<TIME>	<CMND>
 PR	: priority value of process. higher the value-less priority and vice versa. always +20 of NI
 NI	: nice value. used to modify process priority value. 
@@ -414,7 +436,6 @@ priority wise max cpu time is allocated to processes. process priority = 20 - ni
 
 nice -n	num	cmand					: for new process
 renice -n(new priority) <nice value range> <PID>	: for existing process
-
 
 
 Day29: Disk Management
@@ -897,7 +918,7 @@ stress -m 1 --vm-bytes 4G			--> based on swappiness parameter we can see after a
  
 
 --use file as virtual hard disk----
-1. dd if=/dev/zero of=VHD.img bs=1M count=1200		--> 1GB file we are creating
+1. dd if=/dev/zero of=VHD.img bs=1M count=1024		--> 1GB file we are creating
 2. mkfs -t ext4 VHD.img
 3. blkid
 4. mkdir /testdata
@@ -917,6 +938,7 @@ RAID 5 --> striping with parity
 RAID 6 --> striping with double parity
 RAID 10  --> combining striping and mirroring 
 
+striping" refers to a method of data distribution and storage across multiple disks in the RAID array.
 
 Create RAID partitions:(mdadm)
 1. fdisk /dev/sda
@@ -1028,14 +1050,14 @@ edquota	<username>		--> to specify user quota
 edquota	-g <grpname>		--> to specify quota for grp
 9.quota <username>		--> check quota for users
 
-edquota -T <user> or -g <groupname>	--> default is 7 days. to set grace period for user or grp --> make sure you make quotaon /quotadir after this. else if made in on earlier then makde off, specify grace period and make it on.
+edquota -T <user> or -g <groupname>	--> default is 7 days. to set grace period for user or grp --> make sure you make quotaon /quotadir after this. else if made  on earlier then make off, specify grace period and make it on.
 
 
 -----xfs_quota expert utility to manage quota on xfs fs---------------
 xfs_quota -x(expert i.e batch mode without UI) -c(commandline) report /quotadir			--> shows quota specified on /quotadir
 xfs_quota -x -c 'limit bsoft=  bhard=  <username>' /dir			--> set block quota limits for user on /dir
 xfs_quota -x -c 'limit isoft= ihard= <usr>' /dir			--> set inode quota limits for user on dir
-xfs_quora -x -c 'report bih' /dir					--> to see block and inode quota in human readable format
+xfs_quota -x -c 'report bih' /dir					--> to see block and inode quota in human readable format
 
 xfs_quota -x -c 'limit bsoft=  bhard=  <username>' /dir  -c 'limit isoft= ihard= <usr>' /dir		--> set block or inode limit quota in single cmnd
 
@@ -1173,7 +1195,7 @@ POST  --> power on self test. it checks whether all the attached compoents worki
 BIOS 	--> when it gets the POST result as successful then it executes MBR by searching in boot devices (HDD,LAN,CD/DVD,USB etc).
  ⌄		 if there is any h/w issue then system fails.  
  ⌄
-MBR	--> Master boot record stored in 1st sector of booting devices.(512byes) primary boot loader information stored in 440 byes of code. its not a main boot loader. rather main boot loader sector info stored here. (primary boot loader points to GRUB2 i.e main boot loader)
+MBR	--> Master boot record stored in 1st sector of booting devices.(512byes) primary boot loader information stored in 440 byes of code. MBR is not a main boot loader. rather main boot loader sector info stored here. (primary boot loader points to GRUB2 i.e main boot loader)
  ⌄
  ⌄
 GRUB2	--> Grand unified loader(v2).  GRUB2 loads its conf. from /boot/grub2/grub.conf file + then provides option to select kernal from boot menu to boot machin 
@@ -1182,7 +1204,7 @@ GRUB2	--> Grand unified loader(v2).  GRUB2 loads its conf. from /boot/grub2/grub
 	   /boot/grub2/grub.conf --> this contains info related to grub timeout,default kernal, default run level etc but never edit file directly
 Kernal
  ⌄
---> Kernal(VMLinuz) find drivers in initramfs for all h/w intialization/ after this it executes the init process
+--> Kernal(VMLinuz) find drivers in initramfs for all h/w intialization/ after this it executes the init(systemd) process
 H/W initialization
  ⌄
  ⌄
@@ -1282,7 +1304,7 @@ rpm -ivh --root=/mnt/sysimage --replacepkgs kernal-core-4*
 --change grub timeout---
 vi /etc/default/grub
 change timeout to 25 sec
-grub2-mkconfig -o /boot/grub2/grub.cfg
+grub2-mkconfig -o /boot/grub2/grub.conf
 init 6
 
 
@@ -1446,7 +1468,7 @@ make install	--> to install compiled tool
 Day68: Configure local YUM/DNF repository
 dnf config-manager --add-repo=file:///localrepo/BaseOS/		--> configure repo locally . --add-repo=<path/url>
 
-yum repolist all		--> to see repo list
+yum/dnf repolist all		--> to see repo list
 --install epel repo---
 epel : extra pkg enterprise linux
 wget <epel repo url> 
@@ -1477,6 +1499,10 @@ baseurl=file:///localrepo/BaseOs/		--> repo path or url
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 3. dnf repolist all		--> shows local available repo
 
+There are 3 ways to achieve:
+1. use dnf config-manager --add-repo=<repo_url>  	--> which wil download the repoand add it under /etc/yum.repos.d/\
+2. we can use createrep utility to create repo manually 
+3. cd /etc/yum.repos.d/   create repo file with [label] name,enabled=1 and base_url
 
 
 
@@ -1505,8 +1531,8 @@ ip addr or ip a or ifconfig		--> to see the Ip details of n/w adaptors.
 BOOTPROTO=dhcp/None
 ONBOOT=YES
 
-nmcli add con type ethernet con-name <con name> <adaptr name>		--> when you add new adaptor. we have to make it active by this command. IP will be assign by DHCP
-nmcli connecton down/up <adaptor name>  or ifdown/ifup <adaptr name> 			--> to bring adaptor in connected/disconnect state 
+nmcli con add type ethernet con-name <con name> <adaptr name>		--> when you add new adaptor. we have to make it active by this command. IP will be assign by DHCP
+nmcli connecton down/up <con name>  or ifdown/ifup <con name> 			--> to bring adaptor in connected/disconnect state 
 
 
 nmcli con mod <con-name> connection.autoconnect yes/no				--> to auto connect or not. you can also update adaptor file and add ONBOOT=YES/NO 
@@ -1543,11 +1569,11 @@ Note: we can have upto 32 NIC in one server.
 
 1. add 2 NIC adaptor in machine
 2. nmcli dev status				--> shows adaptors in machine
-3. nmcli add connection type team con-name team0 ifname team0 config '{"runner":{"name":"activebackup"}}'		--> create NIC teaming 
+3. nmcli connection add type team con-name team0 ifname team0 config '{"runner":{"name":"activebackup"}}'		--> create NIC teaming 
 4. nmcli con show			--> shows connections in system
 5. nmcli connection modify team0 ipv4.addresses 192.168.227.440/24 ipv4.dns 8.8.8.8 connection.autoconnect yes ipv4.method manual	--> assigning IP to team
-6. nmcli add connection type team-slave con-name team0-part1 ifname  ens224 master team0     --> adding 1st salve to NIC teaming 
-7. nmcli add connection type team-slave con-name team0-part2 ifname  ens225 master team0	    --> adding 2nd slave to NIC teaming 
+6. nmcli connection add type team-slave con-name team0-part1 ifname  ens224 master team0     --> adding 1st salve to NIC teaming 
+7. nmcli connection add type team-slave con-name team0-part2 ifname  ens225 master team0	    --> adding 2nd slave to NIC teaming 
 8. nmcli connection reload			--> reload added configurations
 9. nmcli connection up team0/team0-part1/team0-part2
 
@@ -1593,7 +1619,7 @@ server3
 for i in 'cat server.txt'; do ssh root@$i ssh-copy-id -i ~/.ssh/id_rsa.pub root@$i done;
 
 -------Welcome banner---------
-figlet ustility used to create banner text. ex: figlet DevOps
+figlet utility used to create banner text. ex: figlet DevOps
 1. pre-login	: when we do ssh, banner shows before we put password and enter into server.
 vi /etc/ssh/banner.txt
 Welcome to Server1
@@ -1610,11 +1636,11 @@ edit /etc/motd	file for post login banner
 
 ----disable root login through ssh------
 cat /etc/ssh/sshd_config
-permitRootLogin  yes/no				--> make it No to disable root login to enhanve security
+permitRootLogin  yes/no				--> make it No to disable root login to enhance security
 
 
 -------change default ssh port--------- 
-To avoid unahtourised access or secure it from attacker.
+To avoid unathourised access or secure it from attacker.
 
 1.  update port number in /etc/ssh/sshd_config file
 port 5152
@@ -1684,6 +1710,7 @@ tail /var/log/maillog				--> to see logs
 
 
 Day82: Reset forgotten root password
+Boot system and reach grub menu
 1. select first option in grub menu and press e			[in RHEL9 select rescue option]
 2. select line where linux has been written and go to end of line. replace rhgb quit with rd.break enforcing =0
 3. ctl+x
@@ -1693,6 +1720,13 @@ Day82: Reset forgotten root password
 7. touch /.autorelabel
 8. exit					--> exit chroot env
 9. exit and enter to boot system	--> exit maintenance mode 
+
+
+rd.break enforcing=0 --> These parameters modify the behavior of the kernel and the initial ramdisk (initramfs) during the boot sequence.
+rd.break : This parameter interrupts (pause) the boot process at an early stage and drops the system into emergency mode or a minimal shell 
+
+rhgb:  parameter enables the graphical boot screen with the Red Hat logo and progress bar during the boot process. 
+quite: suppresses most of the informational messages that are displayed during the boot process
 
 
 -------Set or remove GRUB password------------
@@ -1729,8 +1763,8 @@ Note: If you forgot both grub + root password then boot with iso image and do ch
 Day84: Automate backup using rsync and cron
 yum list installed rsync
 dnf install -y rsync
-rsycn -v source/* destination/ --progress		--> to backup source to destination 
-rsycn -av -e ssh source/* root@IP:/destination/		--> -a archive -e remote shell	copy backup on remote machine
+rsync -v source/* destination/ --progress		--> to backup source to destination 
+rsync -av -e ssh source/* root@IP:/destination/		--> -a archive -e remote shell	copy backup on remote machine
   
 
 
@@ -1771,7 +1805,7 @@ firewall-cmd --list-all			--> shows firewall configuration
 firewall-cmd --get-services		--> shows default services firewall knows
 firewall-cmd --zone=public(if deafult then not needed) --permanent --add-service=http or {http,nfs}(this service should be there in firewall services list)	--> add new service to firewall. --remove-service(for removal)
 
-firewall-cmd --reload			--> eload firewall settings
+firewall-cmd --reload			--> reload firewall settings
 firewall-cmd --zone=home  --change-interface=ens160	--> change the zone an interface belongs to 
 firewall-cmd --get-active-zones		--> list active zones
 
@@ -1782,7 +1816,7 @@ cd /etc/firewalld/services/
 vi <service_name>.xml		--> to add new services to firewall-list but to add that services we need to run --add-srvice=<service_name> command
 
 firewall-cmd --permanent --add-port=80/tcp	--> add service by port number. --remove-port(to remove port)
-firewall-cmd -permanent --add-forward-port=port=80:proto=tcp:toport=8080 		--> port forwarding
+firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080 		--> port forwarding
 
 firewall-cmd --permanent --add-masquerade	--> to enable masquerading servive
 firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=192.168.16.12		--> masqeurading(only work on ipv4)
@@ -1802,7 +1836,7 @@ firewall-cmd --permanent --add-icmp-block=echo-request			--> to disable icmp ack
 firewall-cmd --enable-panic		--> block all network traffic in case of emergency
  
 
-Note: Make sure to reload firewall-cmd after every fiewall configuration.
+Note: Make sure to reload firewall-cmd after every firewall configuration.
 
 
 
@@ -1817,18 +1851,20 @@ subjects	--> process or user
 total 3 modes of selinux:
 1. enforced	: Selinux denies access based on policy defined. 
 2. permissive	: does not deny access but denail access are logged in logs for actions that would have been denied if running in enfored mode.  
-3. Disable	: Only DAC rules are used. 
+3. Disable	: Only DAC(user control permissions) rules are used. 
+
+
+Note:  key difference between MAC and DAC lies in who has the authority to set access controls. In MAC, the control is centralized and determined by system policies, while in DAC, it is decentralized and left to the discretion of the resource owner. Many systems, including Linux, use a combination of both models to provide a balance between flexibility and security.
 
 getenforce	--> used to check selinux mode
 setenforce 0/1	--> 0-permissive	1-enforced
 
-SELinux context(or label): process and files are labelled with an selinux context that contains additional info like 
-selinux user,role,type and securty level etc. when running selinux all this info used to make acl dicisions. 
+SELinux context(or label): SELinux context is a set of labels attached to processes and files, defining their permissions and roles in a security-enhanced Linux system. it contains additional info like selinux user,role,type and securty level etc. when running selinux all this info used to make acl decisions. 
 
 SELinux user:role:type:level	--> syntax
 user	: its user identity mapped to selinux roles to apply ACL
 role	: attribute part of RBAC. domains --> roles --> selinux users.
-type	: type enforcement decides domain for processes.
+type	: type enforcement decides domain for processes.(and where it is created if file)
 level	: attribute of MLS (sensitivity(s0-s15):category-set(c0-c1023))
 
 ls -Z filename			--> -z shows selinux settings
@@ -1840,8 +1876,10 @@ semanage login -l		--> shows local user mapping with selinux user info
 
 tail /var/log/audit/audit.log		--> selinux logs(auditd.services runs at background) 
 
+SELinux architechture: SELinux is linux security module built into linux kernal. it is driven by loadable policy rules. When security relevant access is taking place such as process attempts to access file,operation is intercepted in kernal by SELinux, if SELinux policy rule allows operation, it continues otherwise, operation is blocked.   
+
 selinux policy:
-1. Targeted policy: default selinux policy used in fedora. whe used, processes that are targeted run in confined domain else run in unconfined domain.
+1. Targeted policy: default selinux policy used in fedora. when used, processes that are targeted run in confined domain else run in unconfined domain.
 subjects running in unconfined domain cannot allocate writable memory and execute it to avoid vulnerability attack. 
 
 confined processes: almost all the processes that listen on network like sshd,ftp is confined in fedora. (avoid attacks) confine processes run in its own
@@ -1885,7 +1923,7 @@ rpm -qi policycoreutils-gui		--> if want to manage selinux through gui
 3. mls		: multi-level security protection. use sensitivity and category pair values to define confidentiality level. If we use mls then even root
 can't have all the access. it can only access things defined in selinux for root user. 
 
-cat /etc/selinux/config		--> file contains policy info and its modes. to change selinu mode permanently 
+cat /etc/selinux/config		--> file contains policy info and its modes. can use to change selinux mode permanently 
 
 chcon -t <service type> <service/object>		--> temporaily change context of service or object
 semanage fcontext -a -t samba_share_t /etc/file		--> make entry in selinux policy. but implement post restart
@@ -1921,7 +1959,7 @@ provide encryption + authentication + must create new ssh for tunneling
 3. dynamic 		: used to bypass firewall. used SOCKS protocol proxy port
 
 
---local port forwarding between 2 servers---
+-------local port forwarding between 2 servers---
 webserver: http service running on port 80
 local server: ssh -f -N -L localhost:5555:<webserver ip>:80 root@<webserverip> 		--> you can see port forwadring process running on local machine.
 
@@ -2123,7 +2161,7 @@ dnf install -y tuned			--> tuned already installed if os installed with server w
 ls /etc/tuned				--> shows tuned configuration files. usually we dont change directly.
 ls /usr/lib/tuned			--> shows tuned profile files 
 systemctl enable --now tuned		--> start tuned service
-tuned-adm active			--> usd to see active tuned profile
+tuned-adm active			--> used to see active tuned profile
 tuned-adm list				--> list of tuned prfiles
 tuned-adm profile <profile-name>	--> like balanced,virtual-guest,accelerator-performance etc
 tuned-adm recommend			--> to see tuned profile suggestion 
@@ -2132,7 +2170,7 @@ tuned-adm off				--> to disable tuned profile. if we execute tuned-adm active --
 we can create custom tuned profile.
 1. create profle name directory under /usr/lib/tuned/
 2. mkdir test-performance
-3. cd test-performance
+3. cd test-performance 
 4. vi tuned.conf	--> add
 [main]
 include=latency-performance
@@ -2222,7 +2260,7 @@ vi nginx.conf
 http--> server--> 
 location /{
  # proxy_pass <destination serverIP:port
-   proxy_pass http://127.0.0.1/8080;
+   proxy_pass http://127.0.0.1:8080;
 }
 systemctl restart nginx
 getsebool -a | grep httpd		--> get https related selinux configurations
@@ -2381,7 +2419,7 @@ packets may loss in middle as sender dont get any ackowlegement from receiver.
 
 
 -------------OSI model-----------
-open system interconnection means to connect two devices with each other. advanced later of TCP/IP model 
+open system interconnection means to connect two devices with each other. advanced layer of TCP/IP model 
 
 Application Layer    -------------
 Presentatin layer		  |  --> Software layer	
@@ -2434,7 +2472,7 @@ Class A:
 Network (8 bits) + Host (24 bits) 
 rule: 1st bit of the 1st byte is 0
 range: 1-126
-No. N/w: 2^(not of network - reserved no)= 2^(8-1) = 2^7= 128-2(1st-network addr and last-broadcast addr)
+No. N/w: 2^(no of network - reserved no)= 2^(8-1) = 2^7= 128-2(1st-network addr and last-broadcast addr)
 No.Host: 2^24
 
 Note: 127 is loopback address
@@ -2444,8 +2482,8 @@ Network (16 bits) + Host (16 bits)
 rule: 1st bit of the 1st byte is 1
       2nd bit of 1st byte is 0
 range: 128-191
-No. N/w: 2^(not of network - reserved no)= 2^(16-2) = 2^14 = 16384
-No.Host: 2^24 = 65536-2 = 65534
+No. N/w: 2^(no of network - reserved no)= 2^(16-2) = 2^14 = 16384
+No.Host: 2^16 = 65536-2 = 65534
 
 Class C: 
 Network (24 bits) + Host (8 bits) 
@@ -2453,7 +2491,7 @@ rule: 1st bit of the 1st byte is 1
       2nd bit of 1st byte is 1
       3rd bit of 1st byte is 0
 range: 192-223
-No. N/w: 2^(not of network - reserved no)= 2^(24-3) = 2^21 = 2097152
+No. N/w: 2^(no of network - reserved no)= 2^(24-3) = 2^21 = 2097152
 No.Host: 2^8 = 256-2 = 254
 
 Class D: 224-239 Reserved for multicasting (one to many) above classes are unicasting
@@ -2463,3 +2501,287 @@ Understanding network and host portions is crucial for routing and addressing in
 The network portion helps routers direct traffic to the appropriate destination network, while the host portion identifies specific devices within that network.
 
 In the CIDR notation 192.168.1.0/24, the first 24 bits represent the network portion, and the remaining 8 bits represent the host portion. This allows for more flexibility in defining network sizes.
+
+
+
+
+--------------------Real time use of Shell scripts----------------------
+set -x #debug mode
+set -e #Exit on error
+set -o #Exit on pipefail
+
+1. Functions: Organizing and Reusing Code
+#!/bin/bash
+# Define a function
+greet() {
+ local name=$1
+ echo “Hello, $name!”
+}
+# Call the function
+greet “Alice”
+greet “Bob”
+
+In this example, `greet` is a function that takes one argument (`name`) and prints a greeting message. Using `local` ensures the variable scope is limited to the function, preventing unexpected behaviour in larger scripts.
+
+
+2. Error Handling: Making Scripts Robust
+Error handling is crucial for creating reliable scripts. Using `set -e` ensures the script exits immediately if any command fails:
+
+#!/bin/bash
+set -e
+mkdir /some/directory
+cd /some/directory
+touch file.txt
+echo “All commands executed successfully!”
+
+For more granular control, use `trap` to catch errors and execute a specific function:
+#!/bin/bash
+trap ‘echo “An error occurred. Exiting…”; exit 1;’ ERR
+echo “Executing command…”
+false # This command will fail
+echo “This line will not be executed.”
+
+In this script, if any command fails, the `trap` command will print an error message and exit the script.
+
+3. Debugging: Finding and Fixing Issues
+Debugging shell scripts can be tricky, but tools like `set -x` can help by printing each command before it is executed:
+
+#!/bin/bash
+set -x
+echo “This is a test script.”
+false # Intentional failure to demonstrate debugging
+echo “This will not be printed.”
+
+By running this script, you’ll see each command printed to the terminal, making it easier to identify where things go wrong.
+
+4. Working with Arrays: Managing Complex Data
+Arrays allow you to store multiple values in a single variable, which is useful for handling lists and other complex data structures:
+
+#!/bin/bash
+# Declare an array
+fruits=(“Apple” “Banana” “Cherry”)
+# Access array elements
+echo “First fruit: ${fruits[0]}”
+# Loop through the array
+for fruit in “${fruits[@]}”; do
+ echo “Fruit: $fruit”
+done
+
+This script demonstrates how to declare an array, access individual elements, and iterate through all elements.
+
+5. Advanced Text Processing: Using `awk` and `sed`
+`awk` and `sed` are powerful text processing tools that can manipulate text files and streams efficiently:
+
+#!/bin/bash
+# Using awk to print specific columns
+echo -e “Name\tAge\nAlice\t30\nBob\t25” | awk ‘{print $1}’
+# Using sed to replace text
+echo “Hello World” | sed ‘s/World/Shell/’
+
+In this example, `awk` prints the first column from a tab-separated list, and `sed` replaces “World” with “Shell” in the input string.
+
+6. Script Parameters: Enhancing Flexibility
+Scripts can accept parameters to increase their flexibility and usability:
+
+#!/bin/bash
+if [ $# -lt 2 ]; then
+ echo “Usage: $0 <name> <age>”
+ exit 1
+fi
+name=$1
+age=$2
+echo “Name: $name, Age: $age”
+
+This script checks if at least two parameters are provided and then uses them within the script.
+
+7. Integrating with Other Tools: Combining Power
+Advanced scripts often integrate with other command-line tools and utilities. Here’s an example of using `curl` to fetch data from an API and `jq` to parse JSON:
+
+#!/bin/bash
+# Fetch weather data for a given city
+city=”London”
+api_key=”your_api_key_here”
+response=$(curl -s “http://api.openweathermap.org/data/2.5/weather?q=$city&appid=$api_key")
+# Parse and display the temperature
+temp=$(echo $response | jq ‘.main.temp’)
+echo “The temperature in $city is $temp Kelvin.”
+
+This script uses `curl` to retrieve weather data and `jq` to extract the temperature from the JSON response.
+Note: jq: A lightweight and flexible command-line JSON processor. It is commonly used to parse, filter, and manipulate JSON data in shell scripts or command-line environments. With “jq,” one can easily extract specific fields from JSON objects, and format JSON output according to your needs.
+
+8. Background Jobs: Running Tasks Concurrently
+Running tasks in the background allows scripts to perform multiple operations simultaneously:
+
+#!/bin/bash
+# Run tasks in the background
+sleep 5 &
+pid1=$!
+sleep 10 &
+pid2=$!					#store pid of bgrd jobs
+# Wait for all background jobs to complete
+wait $pid1
+wait $pid2
+echo “All background tasks completed.”
+
+This script runs two `sleep` commands in the background and waits for both to complete before proceeding.
+
+9. Automating Backup of a Directory
+This script creates a compressed backup of a directory and stores it with a timestamp.
+#!/bin/bash
+
+# Variables
+SOURCE_DIR="/path/to/source"
+BACKUP_DIR="/path/to/backup"
+TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+BACKUP_FILE="backup-$TIMESTAMP.tar.gz"
+# Create a backup
+tar -czvf $BACKUP_DIR/$BACKUP_FILE $SOURCE_DIR
+# Output message
+echo "Backup completed: $BACKUP_DIR/$BACKUP_FILE"
+
+10. Monitoring Disk Usage
+This script checks disk usage and sends an email if usage exceeds a certain threshold.
+#!/bin/bash
+
+# Variables
+THRESHOLD=80
+EMAIL="admin@example.com"
+CURRENT_USAGE=$(df / | grep / | awk '{ print $5 }' | sed 's/%//g')
+# Check if usage exceeds threshold
+if [ $CURRENT_USAGE -gt $THRESHOLD ]; then
+  echo "Disk usage is at $CURRENT_USAGE% on $(hostname)" | mail -s "Disk Space Alert" $EMAIL
+fi
+
+
+11. Monitoring CPU and Memory Usage
+#!/bin/bash
+
+# Variables
+LOG_FILE="/var/log/resource-usage.log"
+THRESHOLD_CPU=80
+THRESHOLD_MEM=80
+# Get CPU and memory usage
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4}')
+MEM_USAGE=$(free | grep Mem | awk '{print $3/$2 * 100.0}')
+# Log the usage
+echo "$(date): CPU: $CPU_USAGE%, Memory: $MEM_USAGE%" >> $LOG_FILE
+# Alert if usage is above threshold
+if (( $(echo "$CPU_USAGE > $THRESHOLD_CPU" | bc -l) )) || (( $(echo "$MEM_USAGE > $THRESHOLD_MEM" | bc -l) )); then
+  echo "$(date): High resource usage detected. CPU: $CPU_USAGE%, Memory: $MEM_USAGE%" | mail -s "Resource Usage Alert" admin@example.com
+fi
+
+
+12 Automating Docker Container Cleanup
+This script removes all stopped Docker containers, dangling images, and unused networks.
+#!/bin/bash
+
+# Remove all stopped containers
+docker container prune -f
+# Remove all dangling images
+docker image prune -f
+# Remove all unused networks
+docker network prune -f
+# Output message
+echo "Docker cleanup completed."
+
+13  System Update and Upgrade
+This script updates and upgrades the system packages on a Debian/Ubuntu system.
+#!/bin/bash
+
+# Update package list
+sudo yum update
+# Upgrade packages
+sudo yum upgrade -y
+# Clean up
+sudo yum autoremove -y
+sudo yum clean
+# Output message
+echo "System update and upgrade completed."
+
+14 Checking Service Status and Restarting if Down
+#!/bin/bash
+
+# Variables
+SERVICE_NAME="your-service-name"
+# Check if the service is running
+if ! systemctl is-active --quiet $SERVICE_NAME; then
+  # Restart the service if it's not running
+  systemctl restart $SERVICE_NAME
+  echo "$SERVICE_NAME was down and has been restarted."
+else
+  echo "$SERVICE_NAME is running."
+fi
+
+15 Automating Log Rotation
+This script rotates logs for a specified directory, keeping only a certain number of backups.
+#!/bin/bash
+
+# Variables
+LOG_DIR="/path/to/logs"
+MAX_BACKUPS=7
+# Rotate logs
+find $LOG_DIR -type f -name "*.log" | while read LOG_FILE; do
+  # Rotate logs and delete old backups
+  mv $LOG_FILE $LOG_FILE.$(date +"%Y%m%d%H%M%S")
+  ls -t $LOG_FILE.* | sed -e "1,${MAX_BACKUPS}d" | xargs -d '\n' rm -f
+done
+# Output message
+echo "Log rotation completed."
+
+
+16 Automated User Account Creation
+#!/bin/bash
+
+# Variables
+USER_LIST="/path/to/userlist.txt"
+DEFAULT_PASSWORD="changeme"
+# Loop through the list of users
+while IFS= read -r USERNAME; do
+  # Create user account
+  useradd -m $USERNAME
+  echo $USERNAME:$DEFAULT_PASSWORD | chpasswd
+  echo "User $USERNAME created with default password."
+done < $USER_LIST
+
+
+17 Automated File Syncing Between Servers
+#!/bin/bash
+
+# Variables
+SOURCE_DIR="/path/to/source"
+DEST_SERVER="user@remote-server"
+DEST_DIR="/path/to/destination"
+LOG_FILE="/var/log/rsync.log"
+# Sync files
+rsync -avz --delete $SOURCE_DIR $DEST_SERVER:$DEST_DIR >> $LOG_FILE 2>&1
+# Output message
+echo "File sync completed. Check $LOG_FILE for details."
+
+18. Database Health Check
+#!/bin/bash
+
+# Variables
+DB_HOST="localhost"
+DB_USER="yourusername"
+DB_PASS="yourpassword"
+DB_NAME="yourdbname"
+# Check database connection
+if mysqladmin ping -h $DB_HOST -u $DB_USER -p$DB_PASS --silent; then
+  echo "Database $DB_NAME is up and running."
+else
+  echo "Database $DB_NAME is down."
+  # Restart the database service (optional)
+  # systemctl restart mysql
+fi
+
+19. Automating Cleanup of Old Files
+#!/bin/bash
+
+# Variables
+TARGET_DIR="/path/to/directory"
+DAYS_OLD=30
+# Find and delete files older than the specified number of days
+find $TARGET_DIR -type f -mtime +$DAYS_OLD -exec rm -f {} \;
+# Output message
+echo "Cleanup completed. Files older than $DAYS_OLD days have been deleted."
+
